@@ -38,7 +38,7 @@ public class UDPBroadcastSearcher {
     private static class Listener extends Thread {
         private final int listenPort;
         private final CountDownLatch countDownLatch;
-        private final List<Device> devices = new ArrayList<>();
+        private final List<Device> devices = new ArrayList<Device>();
         private boolean done = false;
         private DatagramSocket datagramSocket = null;
 

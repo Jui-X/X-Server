@@ -7,7 +7,7 @@ package UDPDemo;
  * @create: 2019-05-20 20:46
  **/
 public class MessageBuilder {
-    private static final String SERVER_HEADER = "Receive Message and This is Server ";
+    private static final String SERVER_HEADER = "Receive Message and This is TCPClient ";
     private static final String PORT_HEADER = "Please reply port ";
 
     public static String buildPort(int port) {

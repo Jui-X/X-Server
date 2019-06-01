@@ -54,7 +54,7 @@ public class SocketClient {
 
             // 从服务器读取一行
             String echo = socketBufferedReader.readLine();
-            String bye_msg = "bye";
+            String bye_msg = "bye~";
             if (bye_msg.equalsIgnoreCase(echo)) {
                 flag = false;
             }

@@ -1,4 +1,4 @@
-package TCPAndUDP.UDP.Client;
+package BaseChatroom.UDP.Client;
 
 import lombok.Data;
 

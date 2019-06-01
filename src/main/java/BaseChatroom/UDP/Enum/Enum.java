@@ -1,4 +1,4 @@
-package TCPAndUDP.UDP.Enum;
+package BaseChatroom.UDP.Enum;
 
 import lombok.Getter;
 
