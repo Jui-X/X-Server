@@ -16,8 +16,17 @@ import java.net.SocketTimeoutException;
  * @create: 2019-05-27 16:39
  **/
 public class TCPClient {
+    private final Socket socket;
+    private final ClientReadHandler clientReadHandler;
+    private final PrintStream printStream;
 
-    public static void linkWith(ServerInfo info) throws IOException {
+    public TCPClient(Socket socket, ClientReadHandler clientReadHandler) throws IOException {
+        this.socket = socket;
+        this.clientReadHandler = clientReadHandler;
+        this.printStream = new PrintStream(socket.getOutputStream());
+    }
+
+    public static TCPClient startWith(ServerInfo info) throws IOException {
         Socket client = new Socket();
         // 设置read的阻塞时间为3s
         client.setSoTimeout(3000);
@@ -31,45 +40,22 @@ public class TCPClient {
             ClientReadHandler readHandler = new ClientReadHandler(client.getInputStream());
             readHandler.start();
 
-            try {
-                // 发送接收数据
-                write(client);
-            } catch (Exception e) {
-                System.out.println("Socket通信异常关闭");
-            }
-
-            readHandler.exit();
+            return new TCPClient(client, readHandler);
         } catch (Exception e) {
-            System.out.println("异常关闭");
+            System.out.println("连接异常关闭");
+            CloseUtils.close(client);
         }
 
         client.close();
         System.out.println("TCP Client exit...");
+
+        return null;
     }
 
-    private static void write(Socket client) throws IOException {
-        // 构建键盘输入流
-        InputStream in = System.in;
-        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(in));
-
-        // 得到Socket输出流，并转换成打印流
-        OutputStream outputStream = client.getOutputStream();
-        PrintStream socketPrintSteam = new PrintStream(outputStream);
-
-        do {
-            // 从键盘读取一行
-            String str = bufferedReader.readLine();
-            // 发送到服务器
-            socketPrintSteam.println(str);
-
-            String end = "byebye";
-            if (end.equalsIgnoreCase(str)) {
-                break;
-            }
-        } while (true);
-
-        // 关闭资源
-        socketPrintSteam.close();
+    public void exit() {
+        clientReadHandler.exit();
+        CloseUtils.close(printStream);
+        CloseUtils.close(socket);
     }
 
     /**

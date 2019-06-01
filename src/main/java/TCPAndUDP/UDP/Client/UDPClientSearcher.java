@@ -1,8 +1,8 @@
 package TCPAndUDP.UDP.Client;
 
-import TCPAndUDP.Utils.ByteUtils;
 import TCPAndUDP.UDP.Enum.Constant;
 import TCPAndUDP.UDP.Enum.Enum;
+import TCPAndUDP.Utils.ByteUtils;
 
 import java.io.IOException;
 import java.net.DatagramPacket;

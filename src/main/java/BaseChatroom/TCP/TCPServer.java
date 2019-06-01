@@ -7,6 +7,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.*;
 
 /**
  * @param: none
@@ -14,13 +15,16 @@ import java.util.List;
  * @author: KingJ
  * @create: 2019-05-27 16:39
  **/
-public class TCPServer {
+public class TCPServer implements ClientHandler.ClientHandlerCallBack{
     private final int port;
     private ClientListener myClientListener;
     private List<ClientHandler> clientHandlerList = new ArrayList<ClientHandler>();
+    private final ExecutorService forwardThreadPoolExecutor;
 
     public TCPServer(int port) {
         this.port = port;
+        this.forwardThreadPoolExecutor = new ThreadPoolExecutor(5, 5,
+                2000, TimeUnit.MILLISECONDS, new LinkedBlockingDeque<>());
     }
 
     public boolean start() {
@@ -55,6 +59,22 @@ public class TCPServer {
         }
     }
 
+    @Override
+    public void selfClose(ClientHandler handler) {
+        clientHandlerList.remove(handler);
+    }
+
+    @Override
+    public void onNewMessageArrived(ClientHandler clientHandler, String msg) {
+        System.out.println("Received from " + clientHandler.getClientInfo());
+
+        // 线程池异步提交转发任务
+        forwardThreadPoolExecutor.execute(() -> {
+            clientHandlerList.stream().filter(h -> !h.equals(clientHandler))
+                    .forEach(h -> h.sendMsg(msg));
+        });
+    }
+
     private class ClientListener extends Thread {
         private ServerSocket server;
         private boolean done = true;
@@ -81,8 +101,7 @@ public class TCPServer {
                 // 服务端异步构建线程处理请求
                 try {
                     // 构建新的ClientHandler线程处理客户端请求
-                    ClientHandler clientHandler = new ClientHandler(client,
-                            handler -> clientHandlerList.remove(handler));
+                    ClientHandler clientHandler = new ClientHandler(client, TCPServer.this);
                     clientHandler.receiveMsg();
                     clientHandlerList.add(clientHandler);
                 } catch (IOException e) {

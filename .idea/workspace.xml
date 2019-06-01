@@ -1,63 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="BookmarkManager">
-    <bookmark url="file://$PROJECT_DIR$/src/main/java/TCPAndUDP/TCP/TCPServer.java" line="41" mnemonic="1" />
+    <bookmark url="file://$PROJECT_DIR$/src/main/java/TCPAndUDP/TCP/TCPServer.java" line="40" mnemonic="1" />
   </component>
   <component name="ChangeListManager">
     <list default="true" id="dbcd0ada-fe5f-4b2b-9fff-e2e6d556ee13" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.gradle/4.4/fileChanges/last-build.bin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/4.4/fileHashes/fileHashes.bin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/4.4/fileHashes/fileHashes.lock" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/4.4/taskHistory/taskHistory.bin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/4.4/taskHistory/taskHistory.lock" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/cache.properties" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/outputFiles.bin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/uiDesigner.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/uiDesigner.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build.gradle" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.jar" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.properties" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/gradlew" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/gradlew.bat" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/classes/SocketDemo/SocketClient.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/classes/SocketDemo/SocketServer$ClientHandler.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/classes/SocketDemo/SocketServer.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/classes/TCPAndUDP/Clink/utils/ByteUtils.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/classes/TCPAndUDP/UDP/Client/Client.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/classes/TCPAndUDP/UDP/Client/ClientSearcher.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/classes/TCPAndUDP/UDP/Enum/PortEnum.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/classes/TCPAndUDP/UDP/Enum/TCPConstant.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/classes/TCPAndUDP/UDP/Server/Server.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/classes/TCPAndUDP/UDP/Server/ServerProvider$Provider.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/classes/TCPAndUDP/UDP/Server/ServerProvider.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/classes/TCPDemo/TCPClient.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/classes/TCPDemo/TCPServer$ClientHandler.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/classes/TCPDemo/TCPServer.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/classes/TCPDemo/Utils.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/classes/UDPDemo/MessageBuilder.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/classes/UDPDemo/UDPBroadcastProvider$Provider.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/classes/UDPDemo/UDPBroadcastProvider.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/classes/UDPDemo/UDPBroadcastSearcher$Device.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/classes/UDPDemo/UDPBroadcastSearcher$Listener.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/classes/UDPDemo/UDPBroadcastSearcher.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/classes/UDPDemo/UDPProvider.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/classes/UDPDemo/UDPSearcher.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/settings.gradle" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/SocketDemo/SocketClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/SocketDemo/SocketClient.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/TCPAndUDP/Clink/utils/ByteUtils.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/TCPAndUDP/UDP/Client/Client.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/TCPAndUDP/UDP/Client/ClientSearcher.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/TCPAndUDP/UDP/Client/ServerInfo.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/TCPAndUDP/UDP/Client/ServerInfo.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/TCPAndUDP/UDP/Enum/Enum.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/TCPAndUDP/UDP/Enum/Enum.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/TCPAndUDP/UDP/Server/Server.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/TCPAndUDP/UDP/Server/ServerProvider.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/UDPDemo/MessageBuilder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/UDPDemo/MessageBuilder.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/UDPDemo/UDPBroadcastSearcher.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/UDPDemo/UDPBroadcastSearcher.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/BaseChatroom/Handler/ClientHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/BaseChatroom/Handler/ClientHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/BaseChatroom/TCP/TCPClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/BaseChatroom/TCP/TCPClient.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/BaseChatroom/TCP/TCPServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/BaseChatroom/TCP/TCPServer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/BaseChatroom/UDP/Client/UDPClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/BaseChatroom/UDP/Client/UDPClient.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/BaseChatroom/UDP/Server/UDPServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/BaseChatroom/UDP/Server/UDPServer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/TCPAndUDP/TCP/TCPServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/TCPAndUDP/TCP/TCPServer.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/TCPAndUDP/UDP/Client/UDPClientSearcher.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/TCPAndUDP/UDP/Client/UDPClientSearcher.java" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
     <ignored path="$PROJECT_DIR$/target/" />
@@ -70,50 +25,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="TCPClient.java" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/main/java/BaseChatroom/TCP/TCPClient.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="272">
-              <caret line="52" column="18" lean-forward="true" selection-start-line="52" selection-start-column="18" selection-end-line="52" selection-end-column="18" />
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="ByteUtils.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/BaseChatroom/Utils/ByteUtils.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="136">
-              <caret line="8" column="13" selection-start-line="8" selection-start-column="13" selection-end-line="8" selection-end-column="13" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="ServerInfo.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/BaseChatroom/UDP/Client/ServerInfo.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="187">
-              <caret line="11" column="13" selection-start-line="11" selection-start-column="13" selection-end-line="11" selection-end-column="13" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="TCPServer.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/BaseChatroom/TCP/TCPServer.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="34">
-              <caret line="2" column="19" selection-start-line="2" selection-start-column="19" selection-end-line="2" selection-end-column="19" />
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="UDPClient.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/BaseChatroom/UDP/Client/UDPClient.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="374">
-              <caret line="22" column="29" lean-forward="true" selection-start-line="22" selection-start-column="29" selection-end-line="22" selection-end-column="29" />
+            <state relative-caret-position="39">
+              <caret line="30" lean-forward="true" selection-start-line="30" selection-end-line="30" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -121,38 +37,14 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="UDPClientSearcher.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/BaseChatroom/UDP/Client/UDPClientSearcher.java">
+      <file leaf-file-name="TCPClient.java" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/main/java/BaseChatroom/TCP/TCPClient.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="68">
-              <caret line="4" column="19" selection-start-line="4" selection-start-column="19" selection-end-line="4" selection-end-column="19" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="Enum.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/BaseChatroom/UDP/Enum/Enum.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="85">
-              <caret line="5" column="12" selection-start-line="5" selection-start-column="12" selection-end-line="5" selection-end-column="12" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="UDPServer.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/BaseChatroom/UDP/Server/UDPServer.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="51">
-              <caret line="3" column="19" selection-start-line="3" selection-start-column="19" selection-end-line="3" selection-end-column="19" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="UDPServerProvider.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/BaseChatroom/UDP/Server/UDPServerProvider.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="66">
-              <caret line="4" column="19" selection-start-line="4" selection-start-column="19" selection-end-line="4" selection-end-column="19" />
+            <state relative-caret-position="1263">
+              <caret line="89" column="21" lean-forward="true" selection-start-line="89" selection-start-column="21" selection-end-line="89" selection-end-column="21" />
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -188,7 +80,6 @@
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/pom.xml" />
-        <option value="$PROJECT_DIR$/src/main/java/TCPAndUDP/UDP/Client/ServerInfo.java" />
         <option value="$PROJECT_DIR$/src/main/java/UDPDemo/UDPBroadcastSearcher.java" />
         <option value="$PROJECT_DIR$/src/main/java/TCPAndUDP/UDP/Client/Client.java" />
         <option value="$PROJECT_DIR$/src/main/java/TCPAndUDP/UDP/Enum/Enum.java" />
@@ -197,20 +88,14 @@
         <option value="$PROJECT_DIR$/src/main/java/TCPAndUDP/UDP/Server/ServerProvider.java" />
         <option value="$PROJECT_DIR$/src/main/java/TCPAndUDP/UDP/Client/UDPServer.java" />
         <option value="$PROJECT_DIR$/src/main/java/TCPAndUDP/UDP/Client/TCPClient.java" />
-        <option value="$PROJECT_DIR$/src/main/java/TCPAndUDP/UDP/Client/UDPClientSearcher.java" />
         <option value="$PROJECT_DIR$/src/main/java/SocketDemo/SocketClient.java" />
         <option value="$PROJECT_DIR$/src/main/java/TCPAndUDP/Utils/CloseUtils.java" />
-        <option value="$PROJECT_DIR$/src/main/java/TCPAndUDP/TCP/TCPClient.java" />
-        <option value="$PROJECT_DIR$/src/main/java/TCPAndUDP/UDP/Client/UDPClient.java" />
         <option value="$PROJECT_DIR$/src/main/java/TCPAndUDP/Handler/ClientHandler.java" />
         <option value="$PROJECT_DIR$/src/main/java/TCPAndUDP/UDP/Server/UDPServerProvider.java" />
-        <option value="$PROJECT_DIR$/src/main/java/TCPAndUDP/TCP/TCPServer.java" />
         <option value="$PROJECT_DIR$/src/main/java/TCPAndUDP/UDP/Server/UDPServer.java" />
         <option value="$PROJECT_DIR$/src/main/java/BaseChatroom/UDP/Client/ServerInfo.java" />
         <option value="$PROJECT_DIR$/src/main/java/BaseChatroom/UDP/Enum/Constant.java" />
         <option value="$PROJECT_DIR$/src/main/java/BaseChatroom/UDP/Enum/Enum.java" />
-        <option value="$PROJECT_DIR$/src/main/java/BaseChatroom/UDP/Client/UDPClient.java" />
-        <option value="$PROJECT_DIR$/src/main/java/BaseChatroom/TCP/TCPClient.java" />
         <option value="$PROJECT_DIR$/src/main/java/BaseChatroom/Utils/ByteUtils.java" />
         <option value="$PROJECT_DIR$/src/main/java/BaseChatroom/Utils/CloseUtils.java" />
         <option value="$PROJECT_DIR$/src/main/java/BaseChatroom/UDP/Server/UDPServerProvider.java" />
@@ -218,6 +103,13 @@
         <option value="$PROJECT_DIR$/src/main/java/BaseChatroom/UDP/Client/UDPClientSearcher.java" />
         <option value="$PROJECT_DIR$/src/main/java/BaseChatroom/TCP/TCPServer.java" />
         <option value="$PROJECT_DIR$/src/main/java/BaseChatroom/Handler/ClientHandler.java" />
+        <option value="$PROJECT_DIR$/src/main/java/TCPAndUDP/UDP/Client/UDPClientSearcher.java" />
+        <option value="$PROJECT_DIR$/src/main/java/TCPAndUDP/UDP/Client/ServerInfo.java" />
+        <option value="$PROJECT_DIR$/src/main/java/TCPAndUDP/TCP/TCPServer.java" />
+        <option value="$PROJECT_DIR$/src/main/java/TCPAndUDP/TCP/TCPClient.java" />
+        <option value="$PROJECT_DIR$/src/main/java/TCPAndUDP/UDP/Client/UDPClient.java" />
+        <option value="$PROJECT_DIR$/src/main/java/BaseChatroom/TCP/TCPClient.java" />
+        <option value="$PROJECT_DIR$/src/main/java/BaseChatroom/UDP/Client/UDPClient.java" />
       </list>
     </option>
   </component>
@@ -287,8 +179,8 @@
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
-    <property name="project.structure.last.edited" value="Modules" />
-    <property name="project.structure.proportion" value="0.0" />
+    <property name="project.structure.last.edited" value="Artifacts" />
+    <property name="project.structure.proportion" value="0.15" />
     <property name="project.structure.side.proportion" value="0.2" />
     <property name="settings.editor.selected.configurable" value="Errors" />
   </component>
@@ -434,12 +326,12 @@
       <workItem from="1558946205322" duration="2365000" />
       <workItem from="1558957075873" duration="8398000" />
       <workItem from="1559357659533" duration="592000" />
-      <workItem from="1559358513567" duration="6435000" />
+      <workItem from="1559358513567" duration="10349000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="27555000" />
+    <option name="totallyTimeSpent" value="31469000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -480,6 +372,33 @@
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
     </layout>
+    <layout-to-restore>
+      <window_info anchor="right" id="Palette" order="3" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.3888889" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.17493297" />
+      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
+      <window_info anchor="right" id="Commander" order="0" weight="0.4" />
+      <window_info anchor="bottom" id="TODO" order="6" weight="0.13266762" />
+      <window_info anchor="bottom" id="Database Changes" order="10" show_stripe_button="false" />
+      <window_info id="Designer" order="2" />
+      <window_info id="UI Designer" order="4" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.3281027" />
+      <window_info anchor="right" id="Maven Projects" order="4" />
+      <window_info anchor="right" id="Database" order="5" />
+      <window_info anchor="right" id="Palette&#9;" order="6" />
+      <window_info anchor="bottom" id="Terminal" order="12" weight="0.32905984" />
+      <window_info anchor="bottom" id="Event Log" order="9" side_tool="true" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="Version Control" order="11" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.3988604" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Messages" order="8" weight="0.32905984" />
+      <window_info anchor="bottom" id="FindBugs-IDEA" order="7" />
+      <window_info id="Favorites" order="3" side_tool="true" />
+    </layout-to-restore>
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="1" />
@@ -534,7 +453,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/TCPAndUDP/TCP/TCPServer.java</url>
-          <line>107</line>
+          <line>106</line>
           <properties />
           <option name="timeStamp" value="51" />
         </line-breakpoint>
@@ -744,13 +663,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/TCPAndUDP/UDP/Client/ServerInfo.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="170">
-          <caret line="10" column="4" lean-forward="true" selection-start-line="10" selection-start-column="4" selection-end-line="10" selection-end-column="4" />
-        </state>
-      </provider>
-    </entry>
     <entry file="jar://D:/java/jdk_1.8.0_144/src.zip!/java/lang/Thread.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="225">
@@ -784,16 +696,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/TCPAndUDP/TCP/TCPServer.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="390">
-          <caret line="54" column="26" selection-start-line="54" selection-start-column="26" selection-end-line="54" selection-end-column="26" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/TCPDemo/Utils.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="405">
@@ -801,40 +703,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/TCPAndUDP/UDP/Client/UDPClientSearcher.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-625">
-          <caret line="52" column="17" selection-start-line="52" selection-start-column="17" selection-end-line="52" selection-end-column="17" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/TCPAndUDP/UDP/Client/UDPClient.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="221">
-          <caret line="13" selection-start-line="13" selection-end-line="13" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/BaseChatroom.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="102">
           <caret line="6" column="25" selection-start-line="6" selection-start-column="25" selection-end-line="6" selection-end-column="25" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/TCPAndUDP/TCP/TCPClient.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1360">
-          <caret line="80" column="17" selection-start-line="80" selection-start-column="17" selection-end-line="80" selection-end-column="17" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -855,31 +727,17 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/BaseChatroom/UDP/Client/ServerInfo.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="187">
+          <caret line="11" column="13" selection-start-line="11" selection-start-column="13" selection-end-line="11" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/BaseChatroom/Utils/ByteUtils.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="136">
           <caret line="8" column="13" selection-start-line="8" selection-start-column="13" selection-end-line="8" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/BaseChatroom/UDP/Server/UDPServerProvider.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="66">
-          <caret line="4" column="19" selection-start-line="4" selection-start-column="19" selection-end-line="4" selection-end-column="19" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/BaseChatroom/UDP/Server/UDPServer.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="51">
-          <caret line="3" column="19" selection-start-line="3" selection-start-column="19" selection-end-line="3" selection-end-column="19" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/BaseChatroom/UDP/Enum/Enum.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="85">
-          <caret line="5" column="12" selection-start-line="5" selection-start-column="12" selection-end-line="5" selection-end-column="12" />
         </state>
       </provider>
     </entry>
@@ -890,34 +748,101 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/BaseChatroom/UDP/Client/UDPClient.java">
+    <entry file="file://$PROJECT_DIR$/src/main/java/BaseChatroom/UDP/Enum/Enum.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="85">
+          <caret line="5" column="12" selection-start-line="5" selection-start-column="12" selection-end-line="5" selection-end-column="12" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/BaseChatroom/UDP/Server/UDPServer.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="51">
+          <caret line="3" column="19" selection-start-line="3" selection-start-column="19" selection-end-line="3" selection-end-column="19" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/BaseChatroom/UDP/Server/UDPServerProvider.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="66">
+          <caret line="4" column="19" selection-start-line="4" selection-start-column="19" selection-end-line="4" selection-end-column="19" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/BaseChatroom/Handler/ClientHandler.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="319">
+          <caret line="27" column="51" lean-forward="true" selection-start-line="27" selection-start-column="51" selection-end-line="27" selection-end-column="51" />
+          <folding>
+            <element signature="imports" expanded="true" />
+            <element signature="e#1138#1139#0" expanded="true" />
+            <element signature="e#1170#1171#0" expanded="true" />
+            <element signature="e#3397#3398#0" expanded="true" />
+            <element signature="e#3468#3469#0" expanded="true" />
+            <element signature="e#3657#3658#0" expanded="true" />
+            <element signature="e#3695#3696#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/TCPAndUDP/UDP/Client/ServerInfo.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret column="17" selection-start-column="17" selection-end-column="17" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/TCPAndUDP/UDP/Client/UDPClientSearcher.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="374">
-          <caret line="22" column="29" lean-forward="true" selection-start-line="22" selection-start-column="29" selection-end-line="22" selection-end-column="29" />
+          <caret line="22" column="32" lean-forward="true" selection-start-line="22" selection-start-column="32" selection-end-line="22" selection-end-column="32" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/BaseChatroom/UDP/Client/ServerInfo.java">
+    <entry file="file://$PROJECT_DIR$/src/main/java/TCPAndUDP/TCP/TCPServer.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="187">
-          <caret line="11" column="13" selection-start-line="11" selection-start-column="13" selection-end-line="11" selection-end-column="13" />
+        <state>
+          <caret column="17" selection-start-column="17" selection-end-column="17" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/TCPAndUDP/TCP/TCPClient.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="51">
+          <caret line="3" column="16" selection-start-line="3" selection-start-column="16" selection-end-line="3" selection-end-column="16" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/TCPAndUDP/UDP/Client/UDPClient.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="221">
+          <caret line="13" lean-forward="true" selection-start-line="13" selection-end-line="13" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/BaseChatroom/TCP/TCPServer.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="34">
-          <caret line="2" column="19" selection-start-line="2" selection-start-column="19" selection-end-line="2" selection-end-column="19" />
+        <state>
+          <caret selection-end-column="25" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/BaseChatroom/Handler/ClientHandler.java">
+    <entry file="file://$PROJECT_DIR$/src/main/java/BaseChatroom/UDP/Client/UDPClient.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="850">
-          <caret line="61" column="30" lean-forward="true" selection-start-line="61" selection-start-column="30" selection-end-line="61" selection-end-column="30" />
+        <state relative-caret-position="39">
+          <caret line="30" lean-forward="true" selection-start-line="30" selection-end-line="30" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
@@ -926,8 +851,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/BaseChatroom/TCP/TCPClient.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="272">
-          <caret line="52" column="18" lean-forward="true" selection-start-line="52" selection-start-column="18" selection-end-line="52" selection-end-column="18" />
+        <state relative-caret-position="1263">
+          <caret line="89" column="21" lean-forward="true" selection-start-line="89" selection-start-column="21" selection-end-line="89" selection-end-column="21" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
@@ -986,7 +911,7 @@
       </state>
       <state key="ModuleStructureConfigurable.UI">
         <settings>
-          <last-edited>X-Server_main|X-Server</last-edited>
+          <last-edited>X-Server</last-edited>
           <splitter-proportions>
             <option name="proportions">
               <list>

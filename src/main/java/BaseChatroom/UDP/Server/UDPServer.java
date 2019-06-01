@@ -17,7 +17,7 @@ public class UDPServer {
 
     public static void main(String[] args) throws IOException {
         // 根据端口构建TCP Server
-        TCPServer tcpServer = new TCPServer(Enum.TCP_PORT.getValue());
+        TCPServer tcpServer = new TCPServer(Enum.TCP_PORT.getValue(), forwardThreadPoolExecutor);
         boolean isSucceed = tcpServer.start();
         if (!isSucceed) {
             System.out.println("TCP Server start failed...");

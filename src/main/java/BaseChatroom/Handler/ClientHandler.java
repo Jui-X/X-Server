@@ -16,19 +16,27 @@ public class ClientHandler {
     private final Socket socket;
     private final ClientReadHandler readHandler;
     private final ClientWriteHandler writeHandler;
-    private final CloseNotify closeNotify;
+    private final ClientHandlerCallBack clientHandlerCallBack;
+    private final String clientInfo;
 
-    public ClientHandler(Socket socket, CloseNotify closeNotify) throws IOException {
+    public ClientHandler(Socket socket, ClientHandlerCallBack clientHandlerCallBack) throws IOException {
         this.socket = socket;
         this.readHandler = new ClientReadHandler(socket.getInputStream());
         this.writeHandler = new ClientWriteHandler(socket.getOutputStream());
-        this.closeNotify = closeNotify;
-        System.out.println("新客户端连接：" + socket.getInetAddress() +
-                " P:" + socket.getPort());
+        this.clientHandlerCallBack = clientHandlerCallBack;
+        this.clientInfo = "Address: " + socket.getInetAddress().getHostAddress() + " Port: " + socket.getPort();
+        System.out.println("新客户端连接：" + clientInfo);
     }
 
-    public interface CloseNotify {
+    public String getClientInfo() {
+        return clientInfo;
+    }
+
+    public interface ClientHandlerCallBack {
+        // 关闭自身线程
         void selfClose(ClientHandler clientHandler);
+        // 收到消息时转发给所有其余客户端
+        void onNewMessageArrived(ClientHandler clientHandler, String msg);
     }
 
     /**
@@ -61,7 +69,8 @@ public class ClientHandler {
                         ClientHandler.this.closeItself();
                         break;
                     }
-                    System.out.println(str);
+                    //
+                    clientHandlerCallBack.onNewMessageArrived(ClientHandler.this, str);
                 } while (!done);
             } catch (IOException e) {
                 if (!done) {
@@ -137,7 +146,7 @@ public class ClientHandler {
 
     private void closeItself() {
         exit();
-        closeNotify.selfClose(this);
+        clientHandlerCallBack.selfClose(this);
     }
 
     public void exit() {
