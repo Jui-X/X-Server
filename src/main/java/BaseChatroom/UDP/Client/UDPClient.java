@@ -40,8 +40,6 @@ public class UDPClient {
         }
     }
 
-
-
     private static void write(TCPClient client) throws IOException {
         // 构建键盘输入流
         InputStream in = System.in;
@@ -50,6 +48,8 @@ public class UDPClient {
         do {
             // 从键盘读取一行
             String str = bufferedReader.readLine();
+            // 发送到服务器
+            client.sendMsg(str);
 
             String end = "byebye";
             if (end.equalsIgnoreCase(str)) {

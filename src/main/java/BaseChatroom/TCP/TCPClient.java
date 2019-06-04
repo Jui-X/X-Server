@@ -52,6 +52,10 @@ public class TCPClient {
         return null;
     }
 
+    public void sendMsg(String msg) {
+        printStream.println(msg);
+    }
+
     public void exit() {
         clientReadHandler.exit();
         CloseUtils.close(printStream);

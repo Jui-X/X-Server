@@ -1,13 +1,21 @@
 package BaseChatroom.TCP;
 
 import BaseChatroom.Handler.ClientHandler;
+import BaseChatroom.Utils.CloseUtils;
 
 import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.InetSocketAddress;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @param: none
@@ -17,9 +25,11 @@ import java.util.concurrent.*;
  **/
 public class TCPServer implements ClientHandler.ClientHandlerCallBack{
     private final int port;
-    private ClientListener myClientListener;
+    private ClientListener listener;
     private List<ClientHandler> clientHandlerList = new ArrayList<ClientHandler>();
     private final ExecutorService forwardThreadPoolExecutor;
+    private Selector selector;
+    private ServerSocketChannel server;
 
     public TCPServer(int port) {
         this.port = port;
@@ -29,96 +39,142 @@ public class TCPServer implements ClientHandler.ClientHandlerCallBack{
 
     public boolean start() {
         try {
-            ClientListener clientListener = new ClientListener(port);
-            myClientListener = clientListener;
+            selector = Selector.open();
+
+            ServerSocketChannel server = ServerSocketChannel.open();
+            // 将ServerSocketChannel配置为非阻塞
+            server.configureBlocking(false);
+            // 将Channel对应socket绑定本地端口
+            server.socket().bind(new InetSocketAddress(port));
+            // 注册客户端连接到达的监听
+            server.register(selector, SelectionKey.OP_ACCEPT);
+
+            this.server = server;
+            System.out.println("服务器信息：" + server.getLocalAddress().toString());
+
+            ClientListener clientListener = new ClientListener();
+            listener = clientListener;
+
             // 服务端开始监听客户端过来的消息
             clientListener.start();
         } catch (IOException e) {
             e.printStackTrace();
             return false;
         }
-
         return true;
     }
 
     public void stop() {
-        if (myClientListener != null) {
-            myClientListener.exit();
+        if (listener != null) {
+            listener.exit();
         }
 
-        for (ClientHandler clientHandler : clientHandlerList) {
-            clientHandler.exit();
-        }
+        CloseUtils.close(selector);
+        CloseUtils.close(server);
 
-        clientHandlerList.clear();
+        synchronized (TCPServer.this) {
+            for (ClientHandler clientHandler : clientHandlerList) {
+                clientHandler.exit();
+            }
+            clientHandlerList.clear();
+        }
+        // 关闭线程池
+        forwardThreadPoolExecutor.shutdownNow();
     }
 
-    public void broadcast(String str) {
+    public synchronized void broadcast(String str) {
         for (ClientHandler clientHandler : clientHandlerList) {
             clientHandler.sendMsg(str);
         }
     }
 
     @Override
-    public void selfClose(ClientHandler handler) {
+    public synchronized void selfClose(ClientHandler handler) {
         clientHandlerList.remove(handler);
     }
 
     @Override
-    public void onNewMessageArrived(ClientHandler clientHandler, String msg) {
+    public void onNewMessageArrived(ClientHandler clientHandler, final String msg) {
         System.out.println("Received from " + clientHandler.getClientInfo());
 
         // 线程池异步提交转发任务
         forwardThreadPoolExecutor.execute(() -> {
-            clientHandlerList.stream().filter(h -> !h.equals(clientHandler))
-                    .forEach(h -> h.sendMsg(msg));
+            synchronized (TCPServer.this) {
+                clientHandlerList.stream().filter(h -> !h.equals(clientHandler))
+                        .forEach(h -> h.sendMsg(msg));
+//                for (ClientHandler handler : clientHandlerList) {
+//                    if (clientHandler.equals(handler)) {
+//                        // 跳过自己
+//                        continue;
+//                    }
+//                    // 对其他客户端发送消息
+//                    handler.sendMsg(msg);
+//                }
+            }
         });
     }
 
     private class ClientListener extends Thread {
-        private ServerSocket server;
-        private boolean done = true;
-
-        private ClientListener(int port) throws IOException {
-            server = new ServerSocket(port);
-            System.out.println("服务器端信息：" + server.getInetAddress() + " Port:" + server.getLocalPort());
-        }
+        private boolean done = false;
 
         @Override
         public void run() {
             super.run();
 
+            Selector selector = TCPServer.this.selector;
             System.out.println("TCP Server is ready.");
             // 等待客户端连接
             do {
-                Socket client;
                 try {
-                    // 监听消息，发生阻塞
-                    client = server.accept();
+                    // 轮询结果，返回已就绪的Channel数量
+                    // 0表示没有Channel就绪
+                    if (selector.select() == 0) {
+                        if (done) {
+                            break;
+                        }
+                        continue;
+                    }
+                    Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
+                    while (iterator.hasNext()) {
+                        if (done) {
+                            break;
+                        }
+
+                        SelectionKey key = iterator.next();
+                        iterator.remove();
+
+                        // 关注当前Key的状态是否是已建立连接的状态
+                        if (key.isAcceptable()) {
+                            ServerSocketChannel server = (ServerSocketChannel) key.channel();
+                            // 建立客户端过来的SocketChannel
+                            SocketChannel socketChannel = server.accept();
+
+                            // 服务端异步构建线程处理请求
+                            try {
+                                // 构建新的ClientHandler线程处理客户端请求
+                                ClientHandler clientHandler = new ClientHandler(socketChannel, TCPServer.this);
+                                clientHandler.receiveMsg();
+                                synchronized (TCPServer.this) {
+                                    clientHandlerList.add(clientHandler);
+                                }
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                                System.out.println("TCP Client Error. " + e.getMessage());
+                            }
+                        }
+                    }
                 } catch (IOException e) {
                     continue;
                 }
-                // 服务端异步构建线程处理请求
-                try {
-                    // 构建新的ClientHandler线程处理客户端请求
-                    ClientHandler clientHandler = new ClientHandler(client, TCPServer.this);
-                    clientHandler.receiveMsg();
-                    clientHandlerList.add(clientHandler);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    System.out.println("TCP Client Error. " + e.getMessage());
-                }
-            } while (done);
+
+            } while (!done);
             System.out.println("TCP Server exit.");
         }
 
         void exit() {
             done = true;
-            try {
-                server.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+
+            selector.wakeup();
         }
     }
 

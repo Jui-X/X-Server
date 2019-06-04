@@ -1,11 +1,12 @@
 package BaseChatroom.UDP.Server;
 
 import BaseChatroom.TCP.TCPServer;
-import BaseChatroom.UDP.Enum.Enum;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+
+import static BaseChatroom.UDP.Enum.Enum.TCP_PORT;
 
 /**
  * @param: none
@@ -17,14 +18,14 @@ public class UDPServer {
 
     public static void main(String[] args) throws IOException {
         // 根据端口构建TCP Server
-        TCPServer tcpServer = new TCPServer(Enum.TCP_PORT.getValue(), forwardThreadPoolExecutor);
+        TCPServer tcpServer = new TCPServer(TCP_PORT.getValue());
         boolean isSucceed = tcpServer.start();
         if (!isSucceed) {
             System.out.println("TCP Server start failed...");
             return;
         }
         // 将自己服务器的TCP端口，通过UDP发送到UDP广播的服务器
-        UDPServerProvider.start(Enum.TCP_PORT.getValue());
+        UDPServerProvider.start(TCP_PORT.getValue());
 
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
         String str;
