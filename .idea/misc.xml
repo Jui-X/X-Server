@@ -7,11 +7,13 @@
         <option value="$PROJECT_DIR$/pom.xml" />
         <option value="$PROJECT_DIR$/client/src/main/java/pom.xml" />
         <option value="$PROJECT_DIR$/Xlink/pom.xml" />
+        <option value="$PROJECT_DIR$/NIOServer/pom.xml" />
       </list>
     </option>
     <option name="ignoredFiles">
       <set>
         <option value="$PROJECT_DIR$/Client/pom.xml" />
+        <option value="$PROJECT_DIR$/NIO-Server/pom.xml" />
       </set>
     </option>
   </component>

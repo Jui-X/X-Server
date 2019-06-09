@@ -1,3 +1,6 @@
+import Core.IOContext;
+import Impl.IOSelectorProvider;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -13,6 +16,10 @@ import static Enum.Enum.*;
 public class UDPServer {
 
     public static void main(String[] args) throws IOException {
+        IOContext.setup()
+                .ioProvider(new IOSelectorProvider())
+                .start();
+
         // 根据端口构建TCP Server
         TCPServer tcpServer = new TCPServer(TCP_PORT.getValue());
         boolean isSucceed = tcpServer.start();
@@ -35,5 +42,7 @@ public class UDPServer {
 
         UDPServerProvider.stop();
         tcpServer.stop();
+
+        IOContext.close();
     }
 }

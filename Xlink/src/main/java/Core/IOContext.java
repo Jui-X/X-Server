@@ -24,6 +24,10 @@ public class IOContext {
         return INSTANCE;
     }
 
+    public static StartBoot setup() {
+        return new StartBoot();
+    }
+
     public static void close() throws IOException {
         if (INSTANCE != null) {
             INSTANCE.closeItself();

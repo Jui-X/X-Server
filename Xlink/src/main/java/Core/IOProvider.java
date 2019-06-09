@@ -25,7 +25,7 @@ public interface IOProvider extends Closeable {
 
     /**
      *
-     * 回调发生时嗲用provideInput()，表明当前Channel能够提供输入
+     * 回调发生时调用provideInput()，表明当前Channel能够提供输入
      *
      **/
     abstract class HandleInputCallback implements Runnable {

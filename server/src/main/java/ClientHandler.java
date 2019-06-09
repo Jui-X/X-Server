@@ -1,3 +1,4 @@
+import Core.Connector;
 import Utils.CloseUtils;
 
 import java.io.*;
@@ -15,9 +16,8 @@ import java.util.concurrent.*;
  * @create: 2019-05-27 20:14
  **/
 public class ClientHandler {
-//    private Connector connector;
+    private Connector connector;
     private final SocketChannel socketChannel;
-    private final ClientReadHandler readHandler;
     private final ClientWriteHandler writeHandler;
     private final ClientHandlerCallBack clientHandlerCallBack;
     private final String clientInfo;
@@ -27,9 +27,21 @@ public class ClientHandler {
         // 设置非阻塞模式
         socketChannel.configureBlocking(false);
 
-        Selector readSelector = Selector.open();
-        socketChannel.register(readSelector, SelectionKey.OP_READ);
-        this.readHandler = new ClientReadHandler(readSelector);
+        connector = new Connector() {
+
+            @Override
+            protected void receiveNewMessage(String msg) {
+                super.receiveNewMessage(msg);
+                clientHandlerCallBack.onNewMessageArrived(ClientHandler.this, msg);
+            }
+
+            @Override
+            public void onChannelClosed(SocketChannel channel) {
+                super.onChannelClosed(channel);
+                exit();
+            }
+        };
+        connector.setUp(socketChannel);
 
         Selector writeSelector = Selector.open();
         socketChannel.register(writeSelector, SelectionKey.OP_WRITE);
@@ -49,84 +61,6 @@ public class ClientHandler {
         void selfClose(ClientHandler clientHandler);
         // 收到消息时转发给所有其余客户端
         void onNewMessageArrived(ClientHandler clientHandler, String msg);
-    }
-
-    /**
-     *
-     * 负责读取客户端发来的信息
-     *
-     **/
-
-    class ClientReadHandler extends Thread {
-        private boolean done = false;
-        private final Selector selector;
-        private final ByteBuffer byteBuffer;
-
-        ClientReadHandler(Selector selector) {
-            this.selector = selector;
-            this.byteBuffer = ByteBuffer.allocate(256);
-        }
-
-        @Override
-        public void run() {
-            super.run();
-
-            // 处理客户端请求
-            try {
-                do {
-                    // 轮询结果，返回已就绪的Channel数量
-                    // 0表示没有Channel就绪
-                    if (selector.select() == 0) {
-                        if (done) {
-                            break;
-                        }
-                        continue;
-                    }
-
-                    Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
-                    while (iterator.hasNext()) {
-                        if (done) {
-                            break;
-                        }
-
-                        SelectionKey key = iterator.next();
-                        iterator.remove();
-
-                        if (key.isReadable()) {
-                            SocketChannel client = (SocketChannel) key.channel();
-                            // 读取ByteBuffer之前先清空
-                            byteBuffer.clear();
-                            // 读取
-                            int read = client.read(byteBuffer);
-                            if (read > 0) {
-                                //
-                                String str = new String(byteBuffer.array()
-                                        , 0, read - 1);
-                                clientHandlerCallBack.onNewMessageArrived(ClientHandler.this, str);
-                            } else {
-                                System.out.println("Client cannot read data now!");
-                                // 退出当前客户端
-                                ClientHandler.this.closeItself();
-                                break;
-                            }
-                        }
-                    }
-                } while (!done);
-            } catch (IOException e) {
-                if (!done) {
-                    System.out.println("TCP连接异常断开");
-                    ClientHandler.this.closeItself();
-                }
-            } finally {
-                CloseUtils.close(selector);
-            }
-        }
-
-        void exit() {
-            done = true;
-            selector.wakeup();
-            CloseUtils.close(selector);
-        }
     }
 
     /**
@@ -202,17 +136,13 @@ public class ClientHandler {
         writeHandler.send(str);
     }
 
-    public void receiveMsg() {
-        readHandler.start();
-    }
-
     private void closeItself() {
         exit();
         clientHandlerCallBack.selfClose(this);
     }
 
     public void exit() {
-        readHandler.exit();
+        CloseUtils.close(connector);
         writeHandler.exit();
         CloseUtils.close(socketChannel);
         System.out.println("客户端已退出：" + clientInfo);

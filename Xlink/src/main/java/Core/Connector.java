@@ -59,7 +59,7 @@ public class Connector implements Closeable, SocketChannelAdapter.OnChannelStatu
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
 
     }
 

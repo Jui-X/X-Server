@@ -9,13 +9,11 @@
         <outputRelativeToContentRoot value="true" />
         <module name="client" />
         <module name="common" />
+        <module name="NIOServer" />
         <module name="server" />
         <module name="Xlink" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel target="8">
-      <module name="Chatroom-Client" target="1.5" />
-      <module name="chatroomclient" target="1.5" />
-    </bytecodeTargetLevel>
+    <bytecodeTargetLevel target="8" />
   </component>
 </project>

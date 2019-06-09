@@ -2,8 +2,6 @@ import Utils.CloseUtils;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -11,7 +9,10 @@ import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @param: none
@@ -30,7 +31,7 @@ public class TCPServer implements ClientHandler.ClientHandlerCallBack{
     public TCPServer(int port) {
         this.port = port;
         this.forwardThreadPoolExecutor = new ThreadPoolExecutor(5, 5,
-                2000, TimeUnit.MILLISECONDS, new LinkedBlockingDeque<>());
+                10000, TimeUnit.MILLISECONDS, new LinkedBlockingDeque<>());
     }
 
     public boolean start() {
@@ -141,7 +142,7 @@ public class TCPServer implements ClientHandler.ClientHandlerCallBack{
                             try {
                                 // 构建新的ClientHandler线程处理客户端请求
                                 ClientHandler clientHandler = new ClientHandler(socketChannel, TCPServer.this);
-                                clientHandler.receiveMsg();
+                                // 添加同步处理
                                 synchronized (TCPServer.this) {
                                     clientHandlerList.add(clientHandler);
                                 }

@@ -20,7 +20,6 @@ import java.util.concurrent.TimeUnit;
  * @create: 2019-05-27 20:14
  **/
 public class ClientHandler {
-//    private Connector connector;
     private final SocketChannel socketChannel;
     private final ClientReadHandler readHandler;
     private final ClientWriteHandler writeHandler;

@@ -122,7 +122,7 @@ public class UDPClientSearcher {
         }
 
         List<ServerInfo> serverList = listener.getServerInfoAndClose();
-        if (serverList != null) {
+        if (serverList != null && serverList.size() != 0) {
             return serverList.get(0);
         }
         return null;
