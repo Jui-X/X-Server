@@ -19,14 +19,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @param: none
- * @description:
+ * @description: IO Provider的实现类
+ *               实现注册/解除注册的具体方法
  * @author: KingJ
  * @create: 2019-06-02 18:06
  **/
 public class IOSelectorProvider implements IOProvider {
     private final AtomicBoolean isClosed = new AtomicBoolean(false);
 
-    // 是否处于input/ouput注册过程当中
+    // 是否处于input/output注册过程当中
     private final AtomicBoolean inRegisterInput = new AtomicBoolean(false);
     private final AtomicBoolean inRegisterOutput = new AtomicBoolean(false);
 
@@ -92,6 +93,7 @@ public class IOSelectorProvider implements IOProvider {
                 while (!isClosed.get()) {
                     try {
                         if (writeSelector.select() == 0) {
+                            // 检查是否处于output的注册过程
                             waitSelection(inRegisterOutput);
                             continue;
                         }
@@ -122,6 +124,7 @@ public class IOSelectorProvider implements IOProvider {
 
         Runnable runnable = null;
         try {
+            // 取出Selection Key对应的执行任务
             runnable = map.get(key);
         } catch (Exception ignored) {}
 
@@ -131,6 +134,10 @@ public class IOSelectorProvider implements IOProvider {
         }
     }
 
+    /**
+     * 等待注册监听完成
+     * @param locker
+     */
     private static void waitSelection(final AtomicBoolean locker) {
         synchronized (locker) {
             if (locker.get()) {
@@ -148,25 +155,26 @@ public class IOSelectorProvider implements IOProvider {
     public boolean registerInput(SocketChannel channel, HandleInputCallback callback) throws IOException {
 
         return registerSelectionKey(channel, readSelector, SelectionKey.OP_READ, inRegisterInput,
-                inputCallbackMap, inputHandlerPool, callback) != null;
+                inputCallbackMap, callback) != null;
     }
 
     @Override
     public boolean registerOutput(SocketChannel channel, HandleOutputCallback callback) {
 
         return registerSelectionKey(channel, writeSelector, SelectionKey.OP_WRITE, inRegisterOutput,
-                outputCallbackMap, outputHandlerPool, callback) != null;
+                outputCallbackMap, callback) != null;
     }
 
-    private static SelectionKey registerSelectionKey(SocketChannel channel, Selector selector, int registerOps, AtomicBoolean locker,
-                          HashMap<SelectionKey, Runnable> map, ExecutorService pool, Runnable runnable) {
-
+    private static SelectionKey registerSelectionKey(SocketChannel channel, Selector selector, int registerOps,
+                                                     AtomicBoolean locker, HashMap<SelectionKey, Runnable> map,
+                                                     Runnable runnable) {
         synchronized (locker) {
             // 设置锁定状态
+            // 此时其他线程无法注册
             locker.set(true);
 
             try {
-                // 唤醒当前Selector，让Selector不处于selector()状态
+                // 唤醒当前Selector，让Selector不处于selector()状态（阻塞状态）
                 selector.wakeup();
 
                 SelectionKey key = null;
@@ -180,6 +188,7 @@ public class IOSelectorProvider implements IOProvider {
                     }
                 }
 
+                // 当前Channel没注册过
                 if (key == null) {
                     // 注册selector，得到key
                     key = channel.register(selector, registerOps);
@@ -216,8 +225,11 @@ public class IOSelectorProvider implements IOProvider {
         if (channel.isRegistered()) {
             SelectionKey key = channel.keyFor(selector);
             if (key != null) {
+                // 取消监听
                 key.cancel();
+                // 移除selection key
                 map.remove(key);
+                // 解除阻塞状态，继续下次select操作
                 selector.wakeup();
             }
         }
@@ -235,8 +247,7 @@ public class IOSelectorProvider implements IOProvider {
             readSelector.wakeup();
             writeSelector.wakeup();
 
-            CloseUtils.close(readSelector);
-            CloseUtils.close(writeSelector);
+            CloseUtils.close(readSelector, writeSelector);
         }
     }
 

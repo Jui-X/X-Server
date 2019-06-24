@@ -6,7 +6,7 @@ import java.nio.channels.SocketChannel;
 
 /**
  * @param: none
- * @description:
+ * @description: 读写数据时的数据封装类
  * @author: KingJ
  * @create: 2019-06-02 13:33
  **/
@@ -24,6 +24,7 @@ public class IOParameter {
     }
 
     public String bufferToString() {
+        // 把当前buffer中的数据读取出来转换成String并丢弃换行符
         return new String(buffer.array(), 0, buffer.position() -1);
     }
 

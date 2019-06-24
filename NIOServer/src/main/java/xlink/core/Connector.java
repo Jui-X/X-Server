@@ -9,7 +9,13 @@ import java.util.UUID;
 
 /**
  * @param: none
- * @description:
+ * @description: Connector连接类
+ *               连接依赖于SocketChannel
+ *               SocketChannel是Sender和Receiver的实现
+ *               基于Socket连接之上进行二次封装
+ *               封装成一个真实的发送者和接收者
+ *               最终的核心是经过SocketChannel
+ *               在其之上经过一系列的调度和完善
  * @author: KingJ
  * @create: 2019-06-02 13:32
  **/

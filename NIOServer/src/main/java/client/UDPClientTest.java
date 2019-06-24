@@ -14,7 +14,7 @@ public class UDPClientTest {
     private static boolean done;
 
     public static void main(String[] args) throws IOException {
-        ServerInfo info = UDPClientSearcher.searchServer(5000);
+        ServerInfo info = UDPClientSearcher.searchServer(10000);
         System.out.println("Server:" + info);
 
         if (info == null) {
@@ -45,7 +45,7 @@ public class UDPClientTest {
             }
         }
 
-        System.in.read();
+        System.in.read("con\n".getBytes());
 
         Runnable runnable = () -> {
             while (!done) {
@@ -53,7 +53,7 @@ public class UDPClientTest {
                     client.sendMsg("Hello！");
                 }
                 try {
-                    Thread.sleep(200);
+                    Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -63,7 +63,7 @@ public class UDPClientTest {
         Thread thread = new Thread(runnable);
         thread.start();
 
-        System.in.read();
+        System.in.read("continue\n".getBytes());
 
         // 等待线程完成
         done = true;

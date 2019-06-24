@@ -29,11 +29,8 @@ public class ClientHandler {
 
     public ClientHandler(SocketChannel socketChannel, ClientHandlerCallBack clientHandlerCallBack) throws IOException {
         this.socketChannel = socketChannel;
-        // 设置非阻塞模式
-        socketChannel.configureBlocking(false);
 
         connector = new Connector() {
-
             @Override
             protected void receiveNewMessage(String msg) {
                 super.receiveNewMessage(msg);
@@ -53,7 +50,7 @@ public class ClientHandler {
         this.writeHandler = new ClientWriteHandler(writeSelector);
 
         this.clientHandlerCallBack = clientHandlerCallBack;
-        this.clientInfo = "Address: " + socketChannel.getLocalAddress().toString();
+        this.clientInfo = "Address: " + socketChannel.getRemoteAddress().toString();
         System.out.println("新客户端连接：" + clientInfo);
     }
 

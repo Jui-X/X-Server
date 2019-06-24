@@ -11,10 +11,8 @@ import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @param: none
@@ -33,7 +31,8 @@ public class TCPServer implements ClientHandler.ClientHandlerCallBack{
     public TCPServer(int port) {
         this.port = port;
         this.forwardThreadPoolExecutor = new ThreadPoolExecutor(5, 5,
-                10000, TimeUnit.MILLISECONDS, new LinkedBlockingDeque<>());
+                10000, TimeUnit.MILLISECONDS, new LinkedBlockingDeque<>(),
+                new IOProviderThreadFactory("Forward-Thread-Pool"));
     }
 
     public boolean start() {
@@ -105,6 +104,7 @@ public class TCPServer implements ClientHandler.ClientHandlerCallBack{
         });
     }
 
+    // 监听事件类
     private class ClientListener extends Thread {
         private boolean done = false;
 
@@ -120,11 +120,13 @@ public class TCPServer implements ClientHandler.ClientHandlerCallBack{
                     // 轮询结果，返回已就绪的Channel数量
                     // 0表示没有Channel就绪
                     if (selector.select() == 0) {
+                        // 处于结束态的话直接返回
                         if (done) {
                             break;
                         }
                         continue;
                     }
+                    // 当前就绪时间的迭代器
                     Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
                     while (iterator.hasNext()) {
                         if (done) {
@@ -132,18 +134,19 @@ public class TCPServer implements ClientHandler.ClientHandlerCallBack{
                         }
 
                         SelectionKey key = iterator.next();
+                        // 已经使用过的key从迭代器中移除
                         iterator.remove();
 
                         // 关注当前Key的状态是否是已建立连接的状态
                         if (key.isAcceptable()) {
                             ServerSocketChannel server = (ServerSocketChannel) key.channel();
-                            // 建立客户端过来的SocketChannel
-                            SocketChannel socketChannel = server.accept();
+                            // 客户端过来的SocketChannel，并在NIO机制下key已经是可用的，可直接接收数据
+                            SocketChannel client = server.accept();
 
                             // 服务端异步构建线程处理请求
                             try {
                                 // 构建新的ClientHandler线程处理客户端请求
-                                ClientHandler clientHandler = new ClientHandler(socketChannel, TCPServer.this);
+                                ClientHandler clientHandler = new ClientHandler(client, TCPServer.this);
                                 // 添加同步处理
                                 synchronized (TCPServer.this) {
                                     clientHandlerList.add(clientHandler);
@@ -164,10 +167,35 @@ public class TCPServer implements ClientHandler.ClientHandlerCallBack{
 
         void exit() {
             done = true;
-
+            // 唤醒当前阻塞
             selector.wakeup();
         }
     }
 
+    static class IOProviderThreadFactory implements ThreadFactory {
+        private final ThreadGroup group;
+        private final AtomicInteger threadNumber = new AtomicInteger(1);
+        private final String namePrefix;
 
+        IOProviderThreadFactory(String namePrefix) {
+            SecurityManager s = System.getSecurityManager();
+            this.group = (s != null) ? s.getThreadGroup() :
+                    Thread.currentThread().getThreadGroup();
+            this.namePrefix = namePrefix;
+        }
+
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread t = new Thread(group, r,
+                    namePrefix + threadNumber.getAndIncrement(),
+                    0);
+            if (t.isDaemon()) {
+                t.setDaemon(false);
+            }
+            if (t.getPriority() != Thread.NORM_PRIORITY) {
+                t.setPriority(Thread.NORM_PRIORITY);
+            }
+            return t;
+        }
+    }
 }
