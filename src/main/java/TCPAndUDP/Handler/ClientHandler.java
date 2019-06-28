@@ -57,7 +57,7 @@ public class ClientHandler {
                 do {
                     String str = socketInput.readLine();
                     if (str == null) {
-                        System.out.println("TCP Client cannot read...");
+                        System.out.println("TCP Client cannot readFrom...");
                         ClientHandler.this.closeItself();
                         break;
                     }

@@ -1,10 +1,14 @@
 import Utils.CloseUtils;
+import core.Connector;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.Inet4Address;
 import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.nio.channels.SocketChannel;
 
 /**
  * @param: none
@@ -12,32 +16,23 @@ import java.net.SocketTimeoutException;
  * @author: KingJ
  * @create: 2019-05-27 16:39
  **/
-public class TCPClient {
-    private final Socket socket;
-    private final ClientReadHandler clientReadHandler;
-    private final PrintStream printStream;
+public class TCPClient extends Connector {
 
-    public TCPClient(Socket socket, ClientReadHandler clientReadHandler) throws IOException {
-        this.socket = socket;
-        this.clientReadHandler = clientReadHandler;
-        this.printStream = new PrintStream(socket.getOutputStream());
+    public TCPClient(SocketChannel socketChannel) throws IOException {
+        setUp(socketChannel);
     }
 
     public static TCPClient startWith(ServerInfo info) throws IOException {
-        Socket client = new Socket();
-        // 设置read的阻塞时间为3s
-        client.setSoTimeout(3000);
-        // 连接到TCPServer指定的端口
-        client.connect(new InetSocketAddress(Inet4Address.getByName(info.getAddress()), info.getPort()), 3000);
+        SocketChannel client = SocketChannel.open();
 
-        System.out.println("客户端信息：" + client.getLocalAddress() + " Port:" + client.getLocalPort());
-        System.out.println("服务器端信息：" + client.getInetAddress() + " Port:" + client.getPort());
+        // 连接到TCPServer指定的端口
+        client.connect(new InetSocketAddress(Inet4Address.getByName(info.getAddress()), info.getPort()));
+
+        System.out.println("客户端信息：" + client.getLocalAddress().toString());
+        System.out.println("服务器端信息：" + client.getRemoteAddress().toString());
 
         try {
-            ClientReadHandler readHandler = new ClientReadHandler(client.getInputStream());
-            readHandler.start();
-
-            return new TCPClient(client, readHandler);
+            return new TCPClient(client);
         } catch (Exception e) {
             System.out.println("连接异常关闭");
             CloseUtils.close(client);
@@ -49,14 +44,14 @@ public class TCPClient {
         return null;
     }
 
-    public void sendMsg(String msg) {
-        printStream.println(msg);
+    @Override
+    public void onChannelClosed(SocketChannel channel) {
+        super.onChannelClosed(channel);
+        System.out.println("连接已关闭，无法读取数据！");
     }
 
     public void exit() {
-        clientReadHandler.exit();
-        CloseUtils.close(printStream);
-        CloseUtils.close(socket);
+        CloseUtils.close(this);
     }
 
     /**

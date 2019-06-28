@@ -107,7 +107,7 @@ public class ClientHandler {
                                 String str = new String(byteBuffer.array(), 0, read - 1);
                                 clientHandlerCallBack.onNewMessageArrived(ClientHandler.this, str);
                             } else {
-                                System.out.println("Client cannot read data now!");
+                                System.out.println("Client cannot readFrom data now!");
                                 // 退出当前客户端
                                 ClientHandler.this.closeItself();
                                 break;

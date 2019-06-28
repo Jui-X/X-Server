@@ -48,7 +48,7 @@ public class UDPClientTest {
         Runnable runnable = () -> {
             while (!done) {
                 for (TCPClient client : tcpClientList) {
-                    client.sendMsg("Hello！");
+                    client.send("Hello！");
                 }
                 try {
                     Thread.sleep(1000);

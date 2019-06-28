@@ -1,10 +1,10 @@
-package Impl;
+package impl;
 
-import Core.IOParameter;
-import Core.IOProvider;
-import Core.Receiver;
-import Core.Sender;
 import Utils.CloseUtils;
+import core.IOParameter;
+import core.IOProvider;
+import core.Receiver;
+import core.Sender;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -26,7 +26,9 @@ public class SocketChannelAdapter implements Sender, Receiver, Closeable {
     private IOParameter.IOParaEventListener receiveEventListener;
     private IOParameter.IOParaEventListener sendEventListener;
 
-    public SocketChannelAdapter(SocketChannel channel, Core.IOProvider ioProvider,
+    private IOParameter receiveParameter;
+
+    public SocketChannelAdapter(SocketChannel channel, core.IOProvider ioProvider,
                                 OnChannelStatusChangedListener listener) throws IOException {
         this.channel = channel;
         channel.configureBlocking(false);
@@ -35,17 +37,22 @@ public class SocketChannelAdapter implements Sender, Receiver, Closeable {
         this.listener = listener;
     }
 
+    @Override
+    public void setReceiveListener(IOParameter.IOParaEventListener listener) {
+        receiveEventListener = listener;
+    }
 
     @Override
-    public boolean receiveAsync(IOParameter.IOParaEventListener listener) throws IOException {
+    public boolean receiveAsync(IOParameter parameter) throws IOException {
         if (isClosed.get()) {
             throw new IOException("Current Thread has been closed.");
         }
 
-        receiveEventListener = listener;
+        receiveParameter = parameter;
 
         return IOProvider.registerInput(channel, inputCallback);
     }
+
 
     private final IOProvider.HandleInputCallback inputCallback = new IOProvider.HandleInputCallback() {
         @Override
@@ -54,15 +61,17 @@ public class SocketChannelAdapter implements Sender, Receiver, Closeable {
                 return;
             }
 
-            IOParameter parameter = new IOParameter();
+            IOParameter parameter = receiveParameter;
             IOParameter.IOParaEventListener listener = SocketChannelAdapter.this.receiveEventListener;
             listener.onStart(parameter);
 
             try {
-                if (parameter.read(channel) > 0 && listener != null) {
+                // 具体的读取操作
+                if (parameter.readFrom(channel) > 0 && listener != null) {
+                    // 读取完成回调
                     listener.onComplete(parameter);
                 } else {
-                    throw new IOException("Cannot read any data!");
+                    throw new IOException("Cannot readFrom any data!");
                 }
             } catch (IOException e) {
                 CloseUtils.close(SocketChannelAdapter.this);
@@ -88,7 +97,22 @@ public class SocketChannelAdapter implements Sender, Receiver, Closeable {
             if (isClosed.get()) {
                 return;
             }
-            // TODO
+
+            IOParameter parameter = getAttach();
+            IOParameter.IOParaEventListener listener = sendEventListener;
+
+            listener.onStart(parameter);
+
+            try {
+                if (parameter.writeTo(channel) > 0) {
+                    // 写入完成回调
+                    listener.onComplete(parameter);
+                } else {
+                    throw new IOException("Cannot write any data!");
+                }
+            } catch (IOException e) {
+                CloseUtils.close(SocketChannelAdapter.this);
+            }
             sendEventListener.onComplete(null);
         }
     };

@@ -35,6 +35,7 @@ public class Connector implements Closeable, SocketChannelAdapter.OnChannelStatu
         this.sender = adapter;
         this.receiver = adapter;
 
+        readNextMsg();
     }
 
     private IOParameter.IOParaEventListener echoReceiveListener = new IOParameter.IOParaEventListener() {
@@ -61,7 +62,7 @@ public class Connector implements Closeable, SocketChannelAdapter.OnChannelStatu
     }
 
     protected void receiveNewMessage(String msg) {
-        System.out.println(key.toString() + msg);
+        System.out.println("UUID: " + key.toString() + ": " + msg);
     }
 
     @Override

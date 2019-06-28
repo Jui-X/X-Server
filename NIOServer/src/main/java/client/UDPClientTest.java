@@ -45,7 +45,7 @@ public class UDPClientTest {
             }
         }
 
-        System.in.read("con\n".getBytes());
+        System.in.read();
 
         Runnable runnable = () -> {
             while (!done) {
@@ -63,7 +63,7 @@ public class UDPClientTest {
         Thread thread = new Thread(runnable);
         thread.start();
 
-        System.in.read("continue\n".getBytes());
+        System.in.read();
 
         // 等待线程完成
         done = true;

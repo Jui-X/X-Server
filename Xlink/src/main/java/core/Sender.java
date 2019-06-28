@@ -1,4 +1,4 @@
-package Core;
+package core;
 
 import java.io.Closeable;
 import java.io.IOException;

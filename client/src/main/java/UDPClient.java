@@ -45,7 +45,9 @@ public class UDPClient {
             // 从键盘读取一行
             String str = bufferedReader.readLine();
             // 发送到服务器
-            client.sendMsg(str);
+            client.send("1:" + str);
+            client.send("2:" + str);
+            client.send("3:" + str);
 
             String end = "byebye";
             if (end.equalsIgnoreCase(str)) {

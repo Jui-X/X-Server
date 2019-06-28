@@ -1,4 +1,4 @@
-package Core;
+package core;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -48,6 +48,11 @@ public interface IOProvider extends Closeable {
         @Override
         public final void run() {
             provideOutput(attach);
+        }
+
+        public final <T> T getAttach() {
+            T attach = (T) this.attach;
+            return attach;
         }
 
         public final void setAttach(Object attach) {

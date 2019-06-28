@@ -1,6 +1,6 @@
-package Impl;
+package impl;
 
-import Core.IOProvider;
+import core.IOProvider;
 import Utils.CloseUtils;
 
 import java.io.IOException;
