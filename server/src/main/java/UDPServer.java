@@ -24,7 +24,7 @@ public class UDPServer {
         TCPServer tcpServer = new TCPServer(TCP_PORT.getValue());
         boolean isSucceed = tcpServer.start();
         if (!isSucceed) {
-            System.out.println("TCP Server start failed...");
+            System.out.println("UDPServer => TCP Server start failed...");
             return;
         }
         // 将自己服务器的TCP端口，通过UDP发送到UDP广播的服务器

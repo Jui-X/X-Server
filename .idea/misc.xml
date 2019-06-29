@@ -13,7 +13,9 @@
     <option name="ignoredFiles">
       <set>
         <option value="$PROJECT_DIR$/Client/pom.xml" />
+        <option value="$PROJECT_DIR$/NIO-Advance/pom.xml" />
         <option value="$PROJECT_DIR$/NIO-Server/pom.xml" />
+        <option value="$PROJECT_DIR$/NIOAdvance/pom.xml" />
       </set>
     </option>
   </component>

@@ -26,6 +26,9 @@
         <module>common</module>
         <module>Xlink</module>
         <module>NIOServer</module>
+        <module>NIO-Advance</module>
+        <module>NIOAdvance</module>
+        <module>NIOPlus</module>
     </modules>
 
     <dependencies>

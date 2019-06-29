@@ -20,11 +20,11 @@ public class StringSendPacket extends SendPacket {
 
     @Override
     public byte[] bytes() {
-        return new byte[0];
+        return bytes;
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
 
     }
 }

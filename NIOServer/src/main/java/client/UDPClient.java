@@ -17,13 +17,9 @@ import java.io.InputStreamReader;
 public class UDPClient {
 
     public static void main(String[] args) throws IOException {
-        IOContext.setup()
-                .ioProvider(new IOSelectorProvider())
-                .start();
-
         // 超时时间设置为10s
         ServerInfo serverInfo = UDPClientSearcher.searchServer(5000);
-        System.out.println("TCP Client \t ip: " + serverInfo.getAddress() + "\tport: " + serverInfo.getPort()
+        System.out.println("UDPClient => TCP Client \t ip: " + serverInfo.getAddress() + "\tport: " + serverInfo.getPort()
                 + "\tserver_index: " + serverInfo.getServer_index());
 
         if (serverInfo != null) {
@@ -33,7 +29,7 @@ public class UDPClient {
                 if (tcpClient == null) {
                     return;
                 }
-
+                // 客户端写入数据
                 write(tcpClient);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -43,8 +39,6 @@ public class UDPClient {
                 }
             }
         }
-
-        IOContext.close();
     }
 
     private static void write(TCPClient client) throws IOException {

@@ -28,18 +28,18 @@ public class TCPClient extends Connector {
         // 连接到TCPServer指定的端口
         client.connect(new InetSocketAddress(Inet4Address.getByName(info.getAddress()), info.getPort()));
 
-        System.out.println("客户端信息：" + client.getLocalAddress().toString());
-        System.out.println("服务器端信息：" + client.getRemoteAddress().toString());
+        System.out.println("TCPClient => 客户端信息：" + client.getLocalAddress().toString());
+        System.out.println("TCPClient => 服务器端信息：" + client.getRemoteAddress().toString());
 
         try {
             return new TCPClient(client);
         } catch (Exception e) {
-            System.out.println("连接异常关闭");
+            System.out.println("TCPClient => 连接异常关闭");
             CloseUtils.close(client);
         }
 
         client.close();
-        System.out.println("TCP Client exit...");
+        System.out.println("TCPClient => TCP Client exit...");
 
         return null;
     }
@@ -47,63 +47,11 @@ public class TCPClient extends Connector {
     @Override
     public void onChannelClosed(SocketChannel channel) {
         super.onChannelClosed(channel);
-        System.out.println("连接已关闭，无法读取数据！");
+        System.out.println("TCPClient => 连接已关闭，无法读取数据！");
     }
 
     public void exit() {
         CloseUtils.close(this);
     }
 
-    /**
-     *
-     * 负责读取信息
-     *
-     **/
-
-    static class ClientReadHandler extends Thread {
-        private boolean done = false;
-        private final InputStream inputStream;
-
-        ClientReadHandler(InputStream inputStream) {
-            this.inputStream = inputStream;
-        }
-
-        @Override
-        public void run() {
-            super.run();
-
-            // 客户端请求处理
-            try {
-                // 得到输入流，用于接收数据
-                BufferedReader socketInput = new BufferedReader(new InputStreamReader(inputStream));
-
-                do {
-                    String str;
-                    try {
-                        str = socketInput.readLine();
-                    } catch (SocketTimeoutException e) {
-                        continue;
-                    }
-
-                    if (str == null) {
-                        System.out.println("连接超时，连接已关闭，无法读取数据");
-                        break;
-                    }
-                    System.out.println(str);
-                } while (!done);
-
-            } catch (IOException e) {
-                if (!done) {
-                    System.out.println("TCP连接异常断开");
-                }
-            } finally {
-                CloseUtils.close(inputStream);
-            }
-        }
-
-        void exit() {
-            done = true;
-            CloseUtils.close(inputStream);
-        }
-    }
 }

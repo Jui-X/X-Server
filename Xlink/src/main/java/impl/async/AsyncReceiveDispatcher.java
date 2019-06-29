@@ -45,11 +45,13 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher {
     public void start() {
         // 外层调用start方法时首先调用开始接收操作
         registerReceive();
-
     }
 
     private void registerReceive() {
         try {
+            // 将listener传入进去
+            // 在接受完成的进行回调
+            // 执行onComplete方法 打印（receiveNewMessage） 并 继续接收数据（readNextMsg）
             receiver.receiveAsync(parameter);
         } catch (IOException e) {
             closeAndNotify();
@@ -81,6 +83,7 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher {
         public void onStart(IOParameter parameter) {
             int receiveSize;
             if (receivePacket == null) {
+                // 最小长度为4，一个int的长度
                 receiveSize = 4;
             } else {
                 receiveSize = Math.min(size - position, parameter.capacity());

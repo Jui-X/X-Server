@@ -33,6 +33,7 @@ public class AsyncSendDispatcher implements SendDispatcher {
 
     @Override
     public void send(SendPacket packet) {
+        // 将需要发送的packet存入队列
         queue.offer(packet);
         if (isSending.compareAndSet(false, true)) {
             sendNextPacket();
@@ -44,6 +45,7 @@ public class AsyncSendDispatcher implements SendDispatcher {
         // packet不等于空同时被取消
         if (packet != null && packet.isCanceled()) {
             // 已取消，不用发送
+            // 取出下一个Packet
             return takePacket();
         }
         return packet;
@@ -104,6 +106,18 @@ public class AsyncSendDispatcher implements SendDispatcher {
 
     }
 
+    @Override
+    public void close() throws IOException {
+        if (isSending.compareAndSet(false, true)) {
+            isSending.set(false);
+            SendPacket packet = this.sendPacket;
+            if (packet != null) {
+                sendPacket = null;
+                CloseUtils.close(packet);
+            }
+        }
+    }
+
     private final IOParameter.IOParaEventListener ioParaEventListener = new IOParameter.IOParaEventListener() {
         @Override
         public void onStart(IOParameter parameter) {
@@ -116,18 +130,6 @@ public class AsyncSendDispatcher implements SendDispatcher {
             sendCurrentPacket();
         }
     };
-
-    @Override
-    public void close() throws IOException {
-        if (isSending.compareAndSet(false, true)) {
-            isSending.set(false);
-            SendPacket packet = this.sendPacket;
-            if (packet != null) {
-                sendPacket = null;
-                CloseUtils.close(packet);
-            }
-        }
-    }
 
     @Override
     public void cancel(SendPacket packet) {

@@ -13,7 +13,7 @@ public class UDPClientTest {
 
     public static void main(String[] args) throws IOException {
         ServerInfo info = UDPClientSearcher.searchServer(5000);
-        System.out.println("Server:" + info);
+        System.out.println("UDPClientTest => Server:" + info);
 
         if (info == null) {
             return;
@@ -26,14 +26,14 @@ public class UDPClientTest {
             try {
                 TCPClient client = TCPClient.startWith(info);
                 if (client == null) {
-                    System.out.println("连接异常！");
+                    System.out.println("UDPClientTest => 连接异常！");
                     continue;
                 }
 
                 tcpClientList.add(client);
-                System.out.println("连接成功：" + (++size));
+                System.out.println("UDPClientTest => 连接成功：" + (++size));
             } catch (IOException e) {
-                System.out.println("连接异常！");
+                System.out.println("UDPClientTest => 连接异常！");
             }
 
             try {

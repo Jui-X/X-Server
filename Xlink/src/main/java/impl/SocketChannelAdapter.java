@@ -48,8 +48,10 @@ public class SocketChannelAdapter implements Sender, Receiver, Closeable {
             throw new IOException("Current Thread has been closed.");
         }
 
+        // 此处receiveEventListener来自外层Connector的监听事件echoReceiveListener
         receiveParameter = parameter;
 
+        // 将channel注册到Selector的对应事件（此处为读事件）上
         return IOProvider.registerInput(channel, inputCallback);
     }
 
@@ -62,8 +64,12 @@ public class SocketChannelAdapter implements Sender, Receiver, Closeable {
             }
 
             IOParameter parameter = receiveParameter;
+            // 此处receiveEventListener来自外层Connector的监听事件echoReceiveListener
             IOParameter.IOParaEventListener listener = SocketChannelAdapter.this.receiveEventListener;
-            listener.onStart(parameter);
+
+            if (listener != null) {
+                listener.onStart(parameter);
+            }
 
             try {
                 // 具体的读取操作
@@ -71,6 +77,7 @@ public class SocketChannelAdapter implements Sender, Receiver, Closeable {
                     // 读取完成回调
                     listener.onComplete(parameter);
                 } else {
+                    // Channel可读情况下没有读到任何信息
                     throw new IOException("Cannot readFrom any data!");
                 }
             } catch (IOException e) {
@@ -99,6 +106,7 @@ public class SocketChannelAdapter implements Sender, Receiver, Closeable {
             }
 
             IOParameter parameter = getAttach();
+            // 此处receiveEventListener来自外层Connector的监听事件echoReceiveListener
             IOParameter.IOParaEventListener listener = sendEventListener;
 
             listener.onStart(parameter);
@@ -113,7 +121,6 @@ public class SocketChannelAdapter implements Sender, Receiver, Closeable {
             } catch (IOException e) {
                 CloseUtils.close(SocketChannelAdapter.this);
             }
-            sendEventListener.onComplete(null);
         }
     };
 

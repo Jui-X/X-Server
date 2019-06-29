@@ -31,6 +31,7 @@ public class IOParameter {
     /**
      *
      * 监听当前IOParameter状态
+     * 在读/写事件触发后进行回调
      *
      **/
     public interface IOParaEventListener {

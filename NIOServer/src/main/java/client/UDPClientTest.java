@@ -11,11 +11,11 @@ import java.util.List;
  * @create: 2019-06-06 20:39
  **/
 public class UDPClientTest {
-    private static boolean done;
+    private static int done = 0;
 
     public static void main(String[] args) throws IOException {
         ServerInfo info = UDPClientSearcher.searchServer(10000);
-        System.out.println("Server:" + info);
+        System.out.println("UDPClientTest => Server:" + info);
 
         if (info == null) {
             return;
@@ -48,7 +48,7 @@ public class UDPClientTest {
         System.in.read();
 
         Runnable runnable = () -> {
-            while (!done) {
+            while (done < 3) {
                 for (TCPClient client : tcpClientList) {
                     client.sendMsg("Hello！");
                 }
@@ -57,6 +57,7 @@ public class UDPClientTest {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+                done++;
             }
         };
 
@@ -66,7 +67,7 @@ public class UDPClientTest {
         System.in.read();
 
         // 等待线程完成
-        done = true;
+        done = 3;
         try {
             thread.join();
         } catch (InterruptedException e) {

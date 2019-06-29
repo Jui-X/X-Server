@@ -47,6 +47,9 @@ public class Connector implements Closeable, SocketChannelAdapter.OnChannelStatu
         sendDispatcher.send(packet);
     }
 
+    /**
+     * 接收事件回调
+     */
     private ReceiveDispatcher.ReceivePacketCallback receivePacketCallback = new ReceiveDispatcher.ReceivePacketCallback() {
         @Override
         public void onReceivePacketCompleted(ReceivePacket packet) {
@@ -70,6 +73,12 @@ public class Connector implements Closeable, SocketChannelAdapter.OnChannelStatu
         channel.close();
     }
 
+    /**
+     * Connector继承自SocketChannelAdapter.OnChannelStatusChangedListener
+     * 实现onChannelClosed方法
+     * 以完成在异常发生时的操作
+     * @param channel
+     */
     @Override
     public void onChannelClosed(SocketChannel channel) {
 

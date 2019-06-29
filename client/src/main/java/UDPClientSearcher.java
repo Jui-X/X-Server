@@ -57,7 +57,7 @@ public class UDPClientSearcher {
                     // 根据收到的byte数组进行decode构建字符串
                     byte[] data = receivePacket.getData();
                     boolean isValid = dataSize >= minLen && ByteUtils.startsWith(data, HEADER);
-                    System.out.println("UDP Searcher received from ip " + ip +
+                    System.out.println("UDPClientSearcher => UDP Searcher received from ip " + ip +
                             "\tport = " + port + "\tdataValid: " + isValid);
 
                     if (!isValid) {
@@ -68,7 +68,7 @@ public class UDPClientSearcher {
                     final short cmd = byteBuffer.getShort();
                     final int tcpPort = byteBuffer.getInt();
                     if (cmd != 2 || tcpPort <= 0) {
-                        System.out.printf("UDP Searcher receive cmd:" + cmd + "\ttcpPort:" + tcpPort);
+                        System.out.printf("UDPClientSearcher => UDP Searcher receive cmd:" + cmd + "\ttcpPort:" + tcpPort);
                         continue;
                     }
 
@@ -82,7 +82,7 @@ public class UDPClientSearcher {
 
             } finally {
                 close();
-                System.out.println("UDP Searcher listener finished.");
+                System.out.println("UDPClientSearcher => UDP Searcher listener finished.");
             }
         }
 
@@ -101,7 +101,7 @@ public class UDPClientSearcher {
     }
 
     public static ServerInfo searchServer(int timeout) {
-        System.out.println("UDP Searcher start...");
+        System.out.println("UDPClientSearcher => UDP Searcher start...");
 
         // 成功收到回送的栅栏
         CountDownLatch receiveDownLatch = new CountDownLatch(1);
@@ -115,7 +115,7 @@ public class UDPClientSearcher {
             e.printStackTrace();
         }
 
-        System.out.println("UDP Searcher end.");
+        System.out.println("UDPClientSearcher => UDP Searcher end.");
 
         if (listener == null) {
             return null;
@@ -129,7 +129,7 @@ public class UDPClientSearcher {
     }
 
     private static Listener listen(CountDownLatch receiveDownLatch) throws InterruptedException {
-        System.out.println("UDP Searcher listen...");
+        System.out.println("UDPClientSearcher => UDP Searcher listen...");
 
         CountDownLatch startDownLatch = new CountDownLatch(1);
         Listener listener = new Listener(RESPONSE_PORT, startDownLatch, receiveDownLatch);
@@ -141,7 +141,7 @@ public class UDPClientSearcher {
     }
 
     private static void broadcast() throws IOException {
-        System.out.println("UDP Searcher Broadcast start...");
+        System.out.println("UDPClientSearcher => UDP Searcher Broadcast start...");
 
         // 作为发送方（搜索方），让系统指定端口
         // DatagramSocket用于发送或接收UDP报文
@@ -166,6 +166,6 @@ public class UDPClientSearcher {
         ds.send(requestPacket);
         ds.close();
 
-        System.out.println("UDP Searcher Broadcast finished.");
+        System.out.println("UDPClientSearcher => UDP Searcher Broadcast finished.");
     }
 }

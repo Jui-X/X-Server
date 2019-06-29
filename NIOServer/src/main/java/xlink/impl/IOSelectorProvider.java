@@ -63,7 +63,7 @@ public class IOSelectorProvider implements IOProvider {
                 while (!isClosed.get()) {
                     try {
                         if (readSelector.select() == 0) {
-                            // 判断是否处于注册的过程
+                            // 判断是否处于input注册的过程
                             waitSelection(inRegisterInput);
                             continue;
                         }
@@ -124,7 +124,7 @@ public class IOSelectorProvider implements IOProvider {
 
         Runnable runnable = null;
         try {
-            // 取出Selection Key对应的执行任务
+            // 取出Selection Key对应的Runnable任务
             runnable = map.get(key);
         } catch (Exception ignored) {}
 
@@ -193,6 +193,8 @@ public class IOSelectorProvider implements IOProvider {
                     // 注册selector，得到key
                     key = channel.register(selector, registerOps);
                     // 注册回调
+                    // 将回调函数（inputCallback）注册到map中
+                    // 与key所对应
                     map.put(key, runnable);
                 }
 
@@ -226,6 +228,8 @@ public class IOSelectorProvider implements IOProvider {
             SelectionKey key = channel.keyFor(selector);
             if (key != null) {
                 // 取消监听
+                // 读和写两种操作分离到两个Selector上
+                // cancel()方法会取消Selector上的所有事件
                 key.cancel();
                 // 移除selection key
                 map.remove(key);

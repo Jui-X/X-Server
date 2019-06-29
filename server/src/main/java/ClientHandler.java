@@ -24,7 +24,7 @@ public class ClientHandler extends Connector {
         this.clientHandlerCallBack = clientHandlerCallBack;
         this.clientInfo = "Address: " + socketChannel.getLocalAddress().toString();
 
-        System.out.println("新客户端连接：" + clientInfo);
+        System.out.println("ClientHandler => 新客户端连接：" + clientInfo);
 
         setUp(socketChannel);
     }
@@ -55,6 +55,6 @@ public class ClientHandler extends Connector {
 
     public void exit() {
         CloseUtils.close(this);
-        System.out.println("客户端已退出：" + clientInfo);
+        System.out.println("ClientHandler => 客户端已退出：" + clientInfo);
     }
 }

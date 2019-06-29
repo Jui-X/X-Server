@@ -47,7 +47,7 @@ public class TCPServer implements ClientHandler.ClientHandlerCallBack{
             server.register(selector, SelectionKey.OP_ACCEPT);
 
             this.server = server;
-            System.out.println("服务器信息：" + server.getLocalAddress().toString());
+            System.out.println("TCPServer => 服务器信息：" + server.getLocalAddress().toString());
 
             ClientListener clientListener = new ClientListener();
             listener = clientListener;
@@ -81,7 +81,7 @@ public class TCPServer implements ClientHandler.ClientHandlerCallBack{
 
     public synchronized void broadcast(String str) {
         for (ClientHandler clientHandler : clientHandlerList) {
-            clientHandler.sendMsg(str);
+            clientHandler.send(str);
         }
     }
 
@@ -92,13 +92,12 @@ public class TCPServer implements ClientHandler.ClientHandlerCallBack{
 
     @Override
     public void onNewMessageArrived(ClientHandler clientHandler, final String msg) {
-        System.out.println("Received from " + clientHandler.getClientInfo());
 
         // 线程池异步提交转发任务
         forwardThreadPoolExecutor.execute(() -> {
             synchronized (TCPServer.this) {
                 clientHandlerList.stream().filter(h -> !h.equals(clientHandler))
-                        .forEach(h -> h.sendMsg(msg));
+                        .forEach(h -> h.send(msg));
             }
         });
     }
@@ -111,7 +110,7 @@ public class TCPServer implements ClientHandler.ClientHandlerCallBack{
             super.run();
 
             Selector selector = TCPServer.this.selector;
-            System.out.println("TCP Server is ready.");
+            System.out.println("TCPServer => TCP Server is ready.");
             // 等待客户端连接
             do {
                 try {
@@ -148,7 +147,7 @@ public class TCPServer implements ClientHandler.ClientHandlerCallBack{
                                 }
                             } catch (IOException e) {
                                 e.printStackTrace();
-                                System.out.println("TCP Client Error. " + e.getMessage());
+                                System.out.println("TCPServer => TCP Client Error. " + e.getMessage());
                             }
                         }
                     }
@@ -157,7 +156,7 @@ public class TCPServer implements ClientHandler.ClientHandlerCallBack{
                 }
 
             } while (!done);
-            System.out.println("TCP Server exit.");
+            System.out.println("TCPServer => TCP Server exit.");
         }
 
         void exit() {

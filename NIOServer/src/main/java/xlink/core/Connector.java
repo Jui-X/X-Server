@@ -38,6 +38,19 @@ public class Connector implements Closeable, SocketChannelAdapter.OnChannelStatu
         readNextMsg();
     }
 
+    private void readNextMsg() {
+        if (receiver != null) {
+            try {
+                // 将listener传入进去
+                // 在接受完成的进行回调
+                // 执行onComplete方法 打印（receiveNewMessage） 并 继续接收数据（readNextMsg）
+                receiver.receiveAsync(echoReceiveListener);
+            } catch (IOException e) {
+                System.out.println("Connector => 接收数据异常：" + e.getMessage());
+            }
+        }
+    }
+
     private IOParameter.IOParaEventListener echoReceiveListener = new IOParameter.IOParaEventListener() {
         @Override
         public void onStart(IOParameter parameter) {
@@ -51,18 +64,8 @@ public class Connector implements Closeable, SocketChannelAdapter.OnChannelStatu
         }
     };
 
-    private void readNextMsg() {
-        if (receiver != null) {
-            try {
-                receiver.receiveAsync(echoReceiveListener);
-            } catch (IOException e) {
-                System.out.println("接收数据异常：" + e.getMessage());
-            }
-        }
-    }
-
     protected void receiveNewMessage(String msg) {
-        System.out.println("UUID: " + key.toString() + ": " + msg);
+        System.out.println("Connector => UUID: " + key.toString() + ": " + msg);
     }
 
     @Override
@@ -70,6 +73,12 @@ public class Connector implements Closeable, SocketChannelAdapter.OnChannelStatu
 
     }
 
+    /**
+     * Connector继承自SocketChannelAdapter.OnChannelStatusChangedListener
+     * 实现onChannelClosed方法
+     * 以完成在异常发生时的操作
+     * @param channel
+     */
     @Override
     public void onChannelClosed(SocketChannel channel) {
 

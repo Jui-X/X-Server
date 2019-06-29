@@ -33,8 +33,8 @@ public class TCPClient {
         // 连接到TCPServer指定的端口
         client.connect(new InetSocketAddress(Inet4Address.getByName(info.getAddress()), info.getPort()), 3000);
 
-        System.out.println("客户端信息：" + client.getLocalAddress() + " Port:" + client.getLocalPort());
-        System.out.println("服务器端信息：" + client.getInetAddress() + " Port:" + client.getPort());
+        System.out.println("TCPClient => 客户端信息：" + client.getLocalAddress() + " Port:" + client.getLocalPort());
+        System.out.println("TCPClient => 服务器端信息：" + client.getInetAddress() + " Port:" + client.getPort());
 
         try {
             ClientReadHandler readHandler = new ClientReadHandler(client.getInputStream());
@@ -47,7 +47,7 @@ public class TCPClient {
         }
 
         client.close();
-        System.out.println("TCP Client exit...");
+        System.out.println("TCPClient => TCP Client exit...");
 
         return null;
     }
@@ -102,7 +102,7 @@ public class TCPClient {
 
             } catch (IOException e) {
                 if (!done) {
-                    System.out.println("TCP连接异常断开");
+                    System.out.println("TCPClient => TCP连接异常断开");
                 }
             } finally {
                 CloseUtils.close(inputStream);

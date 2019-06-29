@@ -30,7 +30,7 @@ public class StringReceivePacket extends ReceivePacket {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
 
     }
 }

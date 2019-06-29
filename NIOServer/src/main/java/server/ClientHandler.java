@@ -51,7 +51,7 @@ public class ClientHandler {
 
         this.clientHandlerCallBack = clientHandlerCallBack;
         this.clientInfo = "Address: " + socketChannel.getRemoteAddress().toString();
-        System.out.println("新客户端连接：" + clientInfo);
+        System.out.println("ClientHandler => 新客户端连接：" + clientInfo);
     }
 
     public String getClientInfo() {
@@ -108,7 +108,7 @@ public class ClientHandler {
                         int len = socketChannel.write(byteBuffer);
                         // len == 0合法
                         if (len < 0) {
-                            System.out.println("客户端已无法发送数据！");
+                            System.out.println("ClientHandler => 客户端已无法发送数据！");
                             ClientHandler.this.closeItself();
                             break;
                         }
@@ -147,6 +147,6 @@ public class ClientHandler {
         CloseUtils.close(connector);
         writeHandler.exit();
         CloseUtils.close(socketChannel);
-        System.out.println("客户端已退出：" + clientInfo);
+        System.out.println("ClientHandler => 客户端已退出：" + clientInfo);
     }
 }

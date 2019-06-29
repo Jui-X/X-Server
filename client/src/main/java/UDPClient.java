@@ -1,3 +1,6 @@
+import core.IOContext;
+import impl.IOSelectorProvider;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,10 +14,14 @@ import java.io.InputStreamReader;
  **/
 public class UDPClient {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
+        IOContext.setup()
+                .ioProvider(new IOSelectorProvider())
+                .start();
+
         // 超时时间设置为10s
         ServerInfo serverInfo = UDPClientSearcher.searchServer(5000);
-        System.out.println("TCP Client \t ip: " + serverInfo.getAddress() + "\tport: " + serverInfo.getPort()
+        System.out.println("UDPClient => TCP Client \t ip: " + serverInfo.getAddress() + "\tport: " + serverInfo.getPort()
                 + "\tserver_index: " + serverInfo.getServer_index());
 
         if (serverInfo != null) {
@@ -34,6 +41,8 @@ public class UDPClient {
                 }
             }
         }
+
+        IOContext.close();
     }
 
     private static void write(TCPClient client) throws IOException {
@@ -45,9 +54,7 @@ public class UDPClient {
             // 从键盘读取一行
             String str = bufferedReader.readLine();
             // 发送到服务器
-            client.send("1:" + str);
-            client.send("2:" + str);
-            client.send("3:" + str);
+            client.send(str);
 
             String end = "byebye";
             if (end.equalsIgnoreCase(str)) {

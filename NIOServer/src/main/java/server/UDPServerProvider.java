@@ -63,7 +63,7 @@ public class UDPServerProvider {
         public void run() {
             super.run();
 
-            System.out.println("UDP Provider Start.");
+            System.out.println("UDPServerProvider => UDP Provider Start.");
 
             try {
                 datagramSocket = new DatagramSocket(UDP_PORT.getValue());
@@ -84,7 +84,7 @@ public class UDPServerProvider {
                             && ByteUtils.startsWith(clientData, HEADER);
 
                     // 打印发送者信息
-                    System.out.println("UDP Provider received from ip " + clientIP +
+                    System.out.println("UDPServerProvider => UDP Provider received from ip " + clientIP +
                             "\tport = " + clientPort);
 
                     if (!isValid) {
@@ -110,9 +110,10 @@ public class UDPServerProvider {
                                 receivePacket.getAddress(),
                                 resPort);
                         datagramSocket.send(responsePacket);
-                        System.out.println("UDP Server Provider response to:" + clientIP + "\tport:" + resPort + "\tdataSize:" + len);
+                        System.out.println("UDPServerProvider => UDP Server Provider response to:" + clientIP +
+                                "\tport:" + resPort + "\tdataSize:" + len);
                     } else {
-                        System.out.println("UDP Server Provider response to:" + clientIP + "\tport:" + resPort);
+                        System.out.println("UDPServerProvider => UDP Server Provider response to:" + clientIP + "\tport:" + resPort);
                     }
 
                 }
@@ -120,7 +121,7 @@ public class UDPServerProvider {
 
             } finally {
                 close();
-                System.out.println("UDP Provider finished.");
+                System.out.println("UDPServerProvider => UDP Provider finished.");
             }
         }
 

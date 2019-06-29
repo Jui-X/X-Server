@@ -7,8 +7,9 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="client" />
-        <module name="common" />
+        <module name="Client" />
+        <module name="Common" />
+        <module name="NIOPlus" />
         <module name="NIOServer" />
         <module name="server" />
         <module name="Xlink" />
