@@ -1,5 +1,7 @@
 package core;
 
+import box.BytesReceivePacket;
+import box.FileReceivePacket;
 import box.StringReceivePacket;
 import box.StringSendPacket;
 import impl.SocketChannelAdapter;
@@ -7,6 +9,7 @@ import impl.async.AsyncReceiveDispatcher;
 import impl.async.AsyncSendDispatcher;
 
 import java.io.Closeable;
+import java.io.File;
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
 import java.util.UUID;
@@ -17,8 +20,8 @@ import java.util.UUID;
  * @author: KingJ
  * @create: 2019-06-02 13:32
  **/
-public class Connector implements Closeable, SocketChannelAdapter.OnChannelStatusChangedListener {
-    private UUID key = UUID.randomUUID();
+public abstract class Connector implements Closeable, SocketChannelAdapter.OnChannelStatusChangedListener {
+    protected UUID key = UUID.randomUUID();
     private SocketChannel channel;
     private Sender sender;
     private Receiver receiver;
@@ -47,21 +50,40 @@ public class Connector implements Closeable, SocketChannelAdapter.OnChannelStatu
         sendDispatcher.send(packet);
     }
 
+    public void send(SendPacket packet) {
+        sendDispatcher.send(packet);
+    }
+
     /**
      * 接收事件回调
      */
     private ReceiveDispatcher.ReceivePacketCallback receivePacketCallback = new ReceiveDispatcher.ReceivePacketCallback() {
         @Override
-        public void onReceivePacketCompleted(ReceivePacket packet) {
-            if (packet instanceof StringReceivePacket) {
-                String msg = ((StringReceivePacket) packet).string();
-                receiveNewMessage(msg);
+        public ReceivePacket<?, ?> onNewPacketArrived(byte type, long length) {
+            switch (type) {
+                case Packet.TYPE_MEMORY_BYTES:
+                    return new BytesReceivePacket(length);
+                case Packet.TYPE_MEMORY_STRING:
+                    return new StringReceivePacket(length);
+                case Packet.TYPE_STREAM_FILE:
+                    return new FileReceivePacket(length, createNewReceiveFile());
+                case Packet.TYPE_STREAM_DIRECT:
+                    return new BytesReceivePacket(length);
+                default:
+                    throw new UnsupportedOperationException("Unsupport Packet Type...");
             }
+        }
+
+        @Override
+        public void onReceivePacketCompleted(ReceivePacket packet) {
+            receiveNewPacket(packet);
         }
     };
 
-    protected void receiveNewMessage(String msg) {
-        System.out.println(key.toString() + ": "+ msg);
+    protected abstract File createNewReceiveFile();
+
+    protected void receiveNewPacket(ReceivePacket packet) {
+        System.out.println(key.toString() + ": [New Packet]-Type: "+ packet.type() + ", Length: " + packet.length);
     }
 
     @Override

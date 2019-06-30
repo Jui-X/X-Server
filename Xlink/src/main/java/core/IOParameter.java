@@ -3,7 +3,9 @@ package core;
 import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.SocketChannel;
+import java.nio.channels.WritableByteChannel;
 
 /**
  * @param: none
@@ -12,32 +14,45 @@ import java.nio.channels.SocketChannel;
  * @create: 2019-06-02 13:33
  **/
 public class IOParameter {
-    private int limit = 256;
-    private byte[] byteBuffer = new byte[256];
-    private ByteBuffer buffer = ByteBuffer.wrap(byteBuffer);
+    private int limit = 5;
+    private ByteBuffer buffer = ByteBuffer.allocate(5);
 
     /**
-     * 从bytes中读取数据
-     * @param bytes
-     * @param offset
+     * 从channel中读取数据
      * @return
      */
-    public int readFrom(byte[] bytes, int offset) {
-        int size = Math.min(bytes.length - offset, buffer.remaining());
-        buffer.get(bytes, offset, offset);
-        return size;
+    public int readFrom(ReadableByteChannel channel) throws IOException {
+        startWriting();
+
+        int getBytes = 0;
+        while (buffer.hasRemaining()) {
+            int len = channel.read(buffer);
+            if (len < 0) {
+                throw new EOFException();
+            }
+            getBytes += len;
+        }
+
+        finishWriting();
+
+        return getBytes;
     }
 
     /**
-     * 写入数据到bytes中
-     * @param bytes
-     * @param offset
+     * 写入数据到channel中
      * @return
      */
-    public int writeTo(byte[] bytes, int offset) {
-        int size = Math.min(bytes.length - offset, buffer.remaining());
-        buffer.put(bytes, offset, offset);
-        return size;
+    public int writeTo(WritableByteChannel channel) throws IOException {
+        int getBytes = 0;
+        while (buffer.hasRemaining()) {
+            int len = channel.write(buffer);
+            if (len < 0) {
+                throw new EOFException();
+            }
+            getBytes += len;
+        }
+
+        return getBytes;
     }
 
     /**
@@ -106,7 +121,9 @@ public class IOParameter {
     }
 
     public void writeLength(int size) {
+        startWriting();
         buffer.putInt(size);
+        finishWriting();
     }
 
     public int readLength() {
@@ -118,13 +135,26 @@ public class IOParameter {
     }
 
     /**
-     *
-     * 监听当前IOParameter状态
-     *
-     **/
-    public interface IOParaEventListener {
-        void onStart(IOParameter parameter);
+     * 数据的生产者或消费者
+     */
+    public interface IOParaEventProcessor {
+        /**
+         * 提供一份可消费的IOParameter
+         * @return
+         */
+        IOParameter provideParameter();
 
-        void onComplete(IOParameter parameter);
+        /**
+         * 消费失败时回调
+         * @param parameter parameter
+         * @param e         异常信息
+         */
+        void onConsumeFailed(IOParameter parameter, Exception e);
+
+        /**
+         * 消费完成时的回调
+         * @param parameter parameter
+         */
+        void onConsumeCompleted(IOParameter parameter);
     }
 }

@@ -45,6 +45,7 @@ public class AsyncSendDispatcher implements SendDispatcher {
         // packet不等于空同时被取消
         if (packet != null && packet.isCanceled()) {
             // 已取消，不用发送
+            // 取出下一个Packet
             return takePacket();
         }
         return packet;
@@ -100,11 +101,6 @@ public class AsyncSendDispatcher implements SendDispatcher {
         }
     }
 
-    private void closeAndNotify() {
-        CloseUtils.close(this);
-
-    }
-
     private final IOParameter.IOParaEventListener ioParaEventListener = new IOParameter.IOParaEventListener() {
         @Override
         public void onStart(IOParameter parameter) {
@@ -117,6 +113,11 @@ public class AsyncSendDispatcher implements SendDispatcher {
             sendCurrentPacket();
         }
     };
+
+    private void closeAndNotify() {
+        CloseUtils.close(this);
+
+    }
 
     @Override
     public void close() throws IOException {

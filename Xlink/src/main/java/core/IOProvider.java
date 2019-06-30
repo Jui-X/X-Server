@@ -43,22 +43,12 @@ public interface IOProvider extends Closeable {
      *
      **/
     abstract class HandleOutputCallback implements Runnable {
-        private Object attach;
 
         @Override
         public final void run() {
-            provideOutput(attach);
+            provideOutput();
         }
 
-        public final <T> T getAttach() {
-            T attach = (T) this.attach;
-            return attach;
-        }
-
-        public final void setAttach(Object attach) {
-            this.attach = attach;
-        }
-
-        protected abstract void provideOutput(Object attach);
+        protected abstract void provideOutput();
     }
 }

@@ -29,6 +29,7 @@
         <module>NIO-Advance</module>
         <module>NIOAdvance</module>
         <module>NIOPlus</module>
+        <module>Xyz</module>
     </modules>
 
     <dependencies>

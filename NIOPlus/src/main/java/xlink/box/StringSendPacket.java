@@ -2,8 +2,6 @@ package xlink.box;
 
 import xlink.core.SendPacket;
 
-import java.io.IOException;
-
 /**
  * @param: none
  * @description:
@@ -24,7 +22,7 @@ public class StringSendPacket extends SendPacket {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
 
     }
 }

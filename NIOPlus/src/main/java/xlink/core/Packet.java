@@ -10,7 +10,9 @@ import java.io.Closeable;
  * @create: 2019-06-28 16:50
  **/
 public abstract class Packet implements Closeable {
+    // 数据类型
     protected byte type;
+    // 数据长度
     protected int length;
 
     public byte type() {

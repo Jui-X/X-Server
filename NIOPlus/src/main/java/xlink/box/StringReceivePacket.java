@@ -2,8 +2,6 @@ package xlink.box;
 
 import xlink.core.ReceivePacket;
 
-import java.io.IOException;
-
 /**
  * @param: none
  * @description:
@@ -30,7 +28,7 @@ public class StringReceivePacket extends ReceivePacket {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
 
     }
 }

@@ -79,7 +79,7 @@ public class IOParameter {
             getBytes += len;
         }
 
-        return channel.write(buffer);
+        return getBytes;
     }
 
     /**

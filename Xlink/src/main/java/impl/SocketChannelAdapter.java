@@ -18,15 +18,17 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @create: 2019-06-02 18:06
  **/
 public class SocketChannelAdapter implements Sender, Receiver, Closeable {
+    // 是否被关闭
     private final AtomicBoolean isClosed = new AtomicBoolean(false);
+    // 具体的发送层
     private final SocketChannel channel;
     private final IOProvider IOProvider;
     private final OnChannelStatusChangedListener listener;
 
-    private IOParameter.IOParaEventListener receiveEventListener;
-    private IOParameter.IOParaEventListener sendEventListener;
-
-    private IOParameter receiveParameter;
+    // 接收的回调
+    private IOParameter.IOParaEventProcessor receiveIOEventProcessor;
+    // 发送的回调
+    private IOParameter.IOParaEventProcessor sendIOEventProcessor;
 
     public SocketChannelAdapter(SocketChannel channel, core.IOProvider ioProvider,
                                 OnChannelStatusChangedListener listener) throws IOException {
@@ -37,48 +39,25 @@ public class SocketChannelAdapter implements Sender, Receiver, Closeable {
         this.listener = listener;
     }
 
-    @Override
-    public void setReceiveListener(IOParameter.IOParaEventListener listener) {
-        receiveEventListener = listener;
-    }
-
-    @Override
-    public boolean receiveAsync(IOParameter parameter) throws IOException {
-        if (isClosed.get()) {
-            throw new IOException("Current Thread has been closed.");
-        }
-
-        // 此处receiveEventListener来自外层Connector的监听事件echoReceiveListener
-        receiveParameter = parameter;
-
-        // 将channel注册到Selector的对应事件（此处为读事件）上
-        return IOProvider.registerInput(channel, inputCallback);
-    }
-
-
     private final IOProvider.HandleInputCallback inputCallback = new IOProvider.HandleInputCallback() {
         @Override
         protected void provideInput() {
             if (isClosed.get()) {
                 return;
             }
-
-            IOParameter parameter = receiveParameter;
             // 此处receiveEventListener来自外层Connector的监听事件echoReceiveListener
-            IOParameter.IOParaEventListener listener = SocketChannelAdapter.this.receiveEventListener;
+            IOParameter.IOParaEventProcessor processor = receiveIOEventProcessor;
 
-            if (listener != null) {
-                listener.onStart(parameter);
-            }
+            IOParameter parameter = processor.provideParameter();
 
             try {
                 // 具体的读取操作
                 if (parameter.readFrom(channel) > 0 && listener != null) {
                     // 读取完成回调
-                    listener.onComplete(parameter);
+                    processor.onConsumeCompleted(parameter);
                 } else {
                     // Channel可读情况下没有读到任何信息
-                    throw new IOException("Cannot readFrom any data!");
+                    processor.onConsumeFailed(parameter, new IOException("Cannot readFrom any data!"));
                 }
             } catch (IOException e) {
                 CloseUtils.close(SocketChannelAdapter.this);
@@ -86,37 +65,24 @@ public class SocketChannelAdapter implements Sender, Receiver, Closeable {
         }
     };
 
-    @Override
-    public boolean sendAsync(IOParameter parameter, IOParameter.IOParaEventListener listener) throws IOException {
-        if (isClosed.get()) {
-            throw new IOException("Current Thread has been closed.");
-        }
-
-        sendEventListener = listener;
-        // 当前发送的数据添加到回调中
-        outputCallback.setAttach(parameter);
-        return IOProvider.registerOutput(channel, outputCallback);
-    }
-
     private final IOProvider.HandleOutputCallback outputCallback = new IOProvider.HandleOutputCallback() {
         @Override
-        protected void provideOutput(Object attach) {
+        protected void provideOutput() {
             if (isClosed.get()) {
                 return;
             }
-
-            IOParameter parameter = getAttach();
             // 此处receiveEventListener来自外层Connector的监听事件echoReceiveListener
-            IOParameter.IOParaEventListener listener = sendEventListener;
+            IOParameter.IOParaEventProcessor processor = sendIOEventProcessor;
 
-            listener.onStart(parameter);
+            // 从回调中得到发送数据的parameter
+            IOParameter parameter = processor.provideParameter();
 
             try {
                 if (parameter.writeTo(channel) > 0) {
                     // 写入完成回调
-                    listener.onComplete(parameter);
+                    processor.onConsumeCompleted(parameter);
                 } else {
-                    throw new IOException("Cannot write any data!");
+                    processor.onConsumeFailed(parameter, new IOException("Cannot write any data!"));
                 }
             } catch (IOException e) {
                 CloseUtils.close(SocketChannelAdapter.this);
@@ -133,6 +99,35 @@ public class SocketChannelAdapter implements Sender, Receiver, Closeable {
             CloseUtils.close(channel);
             listener.onChannelClosed(channel);
         }
+    }
+
+    @Override
+    public void setReceiveListener(IOParameter.IOParaEventProcessor processor) {
+        receiveIOEventProcessor = processor;
+    }
+
+    @Override
+    public boolean postReceiveAsync() throws IOException {
+        if (isClosed.get()) {
+            throw new IOException("Current Thread has been closed.");
+        }
+
+        // 将channel注册到Selector的对应事件（此处为读事件）上
+        return IOProvider.registerInput(channel, inputCallback);
+    }
+
+    @Override
+    public void setSendProcessor (IOParameter.IOParaEventProcessor processor) {
+        sendIOEventProcessor = processor;
+    }
+
+    @Override
+    public boolean postSendAsync() throws IOException {
+        if (isClosed.get()) {
+            throw new IOException("Current Thread has been closed.");
+        }
+        // 当前发送的数据添加到回调中
+        return IOProvider.registerOutput(channel, outputCallback);
     }
 
     public interface OnChannelStatusChangedListener {

@@ -4,6 +4,8 @@ import Utils.CloseUtils;
 import core.*;
 
 import java.io.IOException;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -14,21 +16,24 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author: KingJ
  * @create: 2019-06-28 20:09
  **/
-public class AsyncSendDispatcher implements SendDispatcher {
+public class AsyncSendDispatcher implements SendDispatcher, IOParameter.IOParaEventProcessor {
     private final Sender sender;
     private final Queue<SendPacket> queue = new ConcurrentLinkedQueue<>();
     private final AtomicBoolean isSending = new AtomicBoolean();
     private final AtomicBoolean isClosed = new AtomicBoolean(false);
 
     private IOParameter ioParameter = new IOParameter();
-    private SendPacket sendPacket;
+    // 当前Packet的泛型还未定义
+    private SendPacket<?> sendPacket;
+    private ReadableByteChannel readChannel;
 
     // 当前发送packet的大小以及进度
-    private int size;
+    private long size;
     private int position;
 
     public AsyncSendDispatcher(Sender sender) {
         this.sender = sender;
+        sender.setSendProcessor(this);
     }
 
     @Override
@@ -72,66 +77,91 @@ public class AsyncSendDispatcher implements SendDispatcher {
     }
 
     private void sendCurrentPacket() {
-        IOParameter parameter = ioParameter;
-
-        parameter.startWriting();
-
         if (position >= size) {
+            // 如果position > size
+            // 则证明多发送了数据，同样认定为发送失败
+            completeSendPacket(position == size);
             sendNextPacket();
             return;
-        } else if (position == 0) {
-            // 如果position为0则证明发送的是首包
-            // 此时应当把长度信息放入包中
-            parameter.writeLength(size);
         }
-
-        byte[] bytes = sendPacket.bytes();
-        // 把byte数组中的数据写入到parameter中
-        // 偏移量offset即为当前写到的位置position
-        int size = parameter.readFrom(bytes, position);
-        position += size;
-
-        // 写入完成并封装
-        parameter.finishWriting();
-
         try {
-            sender.sendAsync(parameter, ioParaEventListener);
+            // 如果position < size，则继续发送
+            // 把数据放入parameter中
+            // 再进行注册监听，当可以发送的时候就发送数据，并回调发送完成的状态
+            sender.postSendAsync();
         } catch (IOException e) {
             closeAndNotify();
         }
     }
 
+    /**
+     * 完成Packet发送
+     * @param isSucceed 是否发送成功
+     */
+    private void completeSendPacket(boolean isSucceed) {
+        SendPacket packet = this.sendPacket;
+
+        if (packet == null) {
+            return;
+        }
+
+        CloseUtils.close(packet);
+        CloseUtils.close(readChannel);
+
+        sendPacket = null;
+        readChannel = null;
+        size = 0;
+        position = 0;
+    }
+
     private void closeAndNotify() {
         CloseUtils.close(this);
-
     }
 
     @Override
     public void close() throws IOException {
         if (isSending.compareAndSet(false, true)) {
             isSending.set(false);
-            SendPacket packet = this.sendPacket;
-            if (packet != null) {
-                sendPacket = null;
-                CloseUtils.close(packet);
-            }
+            // 异常关闭调用完成方法
+            completeSendPacket(false);
         }
     }
 
-    private final IOParameter.IOParaEventListener ioParaEventListener = new IOParameter.IOParaEventListener() {
-        @Override
-        public void onStart(IOParameter parameter) {
-
-        }
-
-        @Override
-        public void onComplete(IOParameter parameter) {
-            // 继续发送当前包
-            sendCurrentPacket();
-        }
-    };
-
     @Override
     public void cancel(SendPacket packet) {
+    }
+
+    @Override
+    public IOParameter provideParameter() {
+        IOParameter parameter = ioParameter;
+        if (readChannel == null) {
+            readChannel = Channels.newChannel(sendPacket.open());
+            // 首包需要发送长度信息
+            parameter.setLimit(4);
+            parameter.writeLength((int) sendPacket.length());
+        } else {
+            parameter.setLimit((int) Math.min(parameter.capacity(), size - position));
+
+            try {
+                int len = parameter.readFrom(readChannel);
+                position += len;
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+
+        return parameter;
+    }
+
+    @Override
+    public void onConsumeFailed(IOParameter parameter, Exception e) {
+        e.printStackTrace();
+    }
+
+    @Override
+    public void onConsumeCompleted(IOParameter parameter) {
+        // 继续发送当前包
+        sendCurrentPacket();
     }
 }

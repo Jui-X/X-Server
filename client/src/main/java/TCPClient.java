@@ -1,13 +1,12 @@
 import Utils.CloseUtils;
 import core.Connector;
+import core.Packet;
+import core.ReceivePacket;
 
-import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.Inet4Address;
 import java.net.InetSocketAddress;
-import java.net.SocketTimeoutException;
 import java.nio.channels.SocketChannel;
 
 /**
@@ -17,12 +16,14 @@ import java.nio.channels.SocketChannel;
  * @create: 2019-05-27 16:39
  **/
 public class TCPClient extends Connector {
+    private final File cachePath;
 
-    public TCPClient(SocketChannel socketChannel) throws IOException {
+    public TCPClient(SocketChannel socketChannel, File path) throws IOException {
+        cachePath = path;
         setUp(socketChannel);
     }
 
-    public static TCPClient startWith(ServerInfo info) throws IOException {
+    public static TCPClient startWith(ServerInfo info, File cachePath) throws IOException {
         SocketChannel client = SocketChannel.open();
 
         // 连接到TCPServer指定的端口
@@ -32,7 +33,7 @@ public class TCPClient extends Connector {
         System.out.println("TCPClient => 服务器端信息：" + client.getRemoteAddress().toString());
 
         try {
-            return new TCPClient(client);
+            return new TCPClient(client, cachePath);
         } catch (Exception e) {
             System.out.println("TCPClient => 连接异常关闭");
             CloseUtils.close(client);
@@ -42,6 +43,20 @@ public class TCPClient extends Connector {
         System.out.println("TCPClient => TCP Client exit...");
 
         return null;
+    }
+
+    @Override
+    protected File createNewReceiveFile() {
+        return Xyz.createTempFile(cachePath);
+    }
+
+    @Override
+    protected void receiveNewPacket(ReceivePacket packet) {
+        super.receiveNewPacket(packet);
+        if (packet.type() == Packet.TYPE_MEMORY_STRING) {
+            String string = (String) packet.entity();
+            System.out.println(key.toString() + ": "+ string);
+        }
     }
 
     @Override

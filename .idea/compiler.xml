@@ -7,12 +7,15 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="Client" />
+        <module name="NIOServer" />
+        <module name="common" />
         <module name="Common" />
         <module name="NIOPlus" />
-        <module name="NIOServer" />
-        <module name="server" />
+        <module name="Xyz" />
         <module name="Xlink" />
+        <module name="server" />
+        <module name="client" />
+        <module name="Client" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel target="8" />

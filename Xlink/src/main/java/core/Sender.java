@@ -5,5 +5,7 @@ import java.io.IOException;
 
 public interface Sender extends Closeable {
 
-    boolean sendAsync(IOParameter parament, IOParameter.IOParaEventListener listener) throws IOException;
+    void setSendProcessor(IOParameter.IOParaEventProcessor processor);
+
+    boolean postSendAsync() throws IOException;
 }

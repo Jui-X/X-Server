@@ -10,6 +10,7 @@ import java.io.IOException;
  **/
 public class IOContext {
     private static IOContext INSTANCE;
+    // 针对所有连接，都可以通过IOProvider进行注册与解除注册
     private final IOProvider IOProvider;
 
     public IOContext(IOProvider IOProvider) {
