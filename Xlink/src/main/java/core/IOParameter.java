@@ -14,16 +14,34 @@ import java.nio.channels.WritableByteChannel;
  * @create: 2019-06-02 13:33
  **/
 public class IOParameter {
-    private int limit = 5;
-    private ByteBuffer buffer = ByteBuffer.allocate(5);
+    private int limit = 256;
+    private ByteBuffer buffer = ByteBuffer.allocate(256);
 
+    /**
+     * 从bytes数组中读取数据进行消费
+     */
+    public int readFrom(byte[] bytes, int offset, int count) {
+        int size = Math.min(count, buffer.remaining());
+        if (size <= 0) {
+            return 0;
+        }
+        buffer.put(bytes, offset, size);
+        return size;
+    }
+
+    /**
+     * 写入数据到bytes数组中
+     */
+    public int writeTo(byte[] bytes, int offset) {
+        int size = Math.min(bytes.length - offset, buffer.remaining());
+        buffer.get(bytes, offset, size);
+        return size;
+    }
     /**
      * 从channel中读取数据
      * @return
      */
     public int readFrom(ReadableByteChannel channel) throws IOException {
-        startWriting();
-
         int getBytes = 0;
         while (buffer.hasRemaining()) {
             int len = channel.read(buffer);
@@ -32,8 +50,6 @@ public class IOParameter {
             }
             getBytes += len;
         }
-
-        finishWriting();
 
         return getBytes;
     }
@@ -117,13 +133,7 @@ public class IOParameter {
      * @param limit 区间大小
      */
     public void setLimit(int limit) {
-        this.limit = limit;
-    }
-
-    public void writeLength(int size) {
-        startWriting();
-        buffer.putInt(size);
-        finishWriting();
+        this.limit = Math.min(limit, buffer.capacity());
     }
 
     public int readLength() {
@@ -132,6 +142,16 @@ public class IOParameter {
 
     public int capacity() {
         return buffer.capacity();
+    }
+
+    public boolean remained() {
+        return buffer.remaining() > 0;
+    }
+
+    public int fillWithEmpty(int size) {
+        int fillSize = Math.min(size, buffer.remaining());
+        buffer.position(buffer.position() + fillSize);
+        return fillSize;
     }
 
     /**

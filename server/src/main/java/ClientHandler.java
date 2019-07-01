@@ -1,14 +1,11 @@
 import Utils.CloseUtils;
 import core.Connector;
+import core.Packet;
+import core.ReceivePacket;
 
+import java.io.File;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @param: none
@@ -17,10 +14,13 @@ import java.util.concurrent.TimeUnit;
  * @create: 2019-05-27 20:14
  **/
 public class ClientHandler extends Connector {
+    // 缓存文件目录
+    private final File cachePath;
     private final ClientHandlerCallBack clientHandlerCallBack;
     private final String clientInfo;
 
-    public ClientHandler(SocketChannel socketChannel, ClientHandlerCallBack clientHandlerCallBack) throws IOException {
+    public ClientHandler(File cachePath, SocketChannel socketChannel, ClientHandlerCallBack clientHandlerCallBack) throws IOException {
+        this.cachePath = cachePath;
         this.clientHandlerCallBack = clientHandlerCallBack;
         this.clientInfo = "Address: " + socketChannel.getLocalAddress().toString();
 
@@ -30,9 +30,14 @@ public class ClientHandler extends Connector {
     }
 
     @Override
-    protected void receiveNewMessage(String msg) {
-        super.receiveNewMessage(msg);
-        clientHandlerCallBack.onNewMessageArrived(this, msg);
+    protected void receiveNewPacket(ReceivePacket packet) {
+        super.receiveNewPacket(packet);
+        if (packet.type() == Packet.TYPE_MEMORY_STRING) {
+            String string = (String) packet.entity();
+            System.out.println(key.toString() + ": "+ string);
+            // 将收到的String进行转发
+            clientHandlerCallBack.onNewMessageArrived(this, string);
+        }
     }
 
     public interface ClientHandlerCallBack {
@@ -40,6 +45,11 @@ public class ClientHandler extends Connector {
         void selfClose(ClientHandler clientHandler);
         // 收到消息时转发给所有其余客户端
         void onNewMessageArrived(ClientHandler clientHandler, String msg);
+    }
+
+    @Override
+    protected File createNewReceiveFile() {
+        return Xyz.createTempFile(cachePath);
     }
 
     @Override

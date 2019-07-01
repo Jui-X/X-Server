@@ -1,11 +1,12 @@
 package impl.async;
 
 import Utils.CloseUtils;
-import core.*;
+import core.IOParameter;
+import core.SendDispatcher;
+import core.SendPacket;
+import core.Sender;
 
 import java.io.IOException;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -16,37 +17,57 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author: KingJ
  * @create: 2019-06-28 20:09
  **/
-public class AsyncSendDispatcher implements SendDispatcher, IOParameter.IOParaEventProcessor {
+public class AsyncSendDispatcher implements SendDispatcher, IOParameter.IOParaEventProcessor,
+        AsyncPacketReader.PacketProvider {
     private final Sender sender;
     private final Queue<SendPacket> queue = new ConcurrentLinkedQueue<>();
     private final AtomicBoolean isSending = new AtomicBoolean();
     private final AtomicBoolean isClosed = new AtomicBoolean(false);
 
-    private IOParameter ioParameter = new IOParameter();
-    // 当前Packet的泛型还未定义
-    private SendPacket<?> sendPacket;
-    private ReadableByteChannel readChannel;
+    private AsyncPacketReader reader = new AsyncPacketReader(this);
 
-    // 当前发送packet的大小以及进度
-    private long size;
-    private int position;
+    public final Object queueLock = new Object();
 
     public AsyncSendDispatcher(Sender sender) {
         this.sender = sender;
         sender.setSendProcessor(this);
     }
 
+    /**
+     * 发送Packet
+     * 首先添加到队列，如果当前状态为未启动发送状态
+     * 则，尝试让reader提取一份packet进行数据发送
+     * 如果提取数据后reader有数据，则进行异步输出注册
+     * @param packet 数据
+     */
     @Override
     public void send(SendPacket packet) {
-        // 将需要发送的packet存入队列
-        queue.offer(packet);
-        if (isSending.compareAndSet(false, true)) {
-            sendNextPacket();
+        synchronized (queueLock) {
+            // 将需要发送的packet存入队列
+            queue.offer(packet);
+            if (isSending.compareAndSet(false, true)) {
+                if (reader.requestTakePacket()) {
+                    requestSend();
+                }
+            }
         }
     }
 
-    private SendPacket takePacket() {
-        SendPacket packet = queue.poll();
+    /**
+     * reader从当前队列中提取一份Packet
+     * @return 如果队列有可用于发送的数据则返回该Packet
+     */
+    @Override
+    public SendPacket takePacket() {
+        SendPacket packet;
+        synchronized (queueLock) {
+            packet = queue.poll();
+            if (packet == null) {
+                // 队列为空，取消发送状态
+                isSending.set(false);
+                return null;
+            }
+        }
         // packet不等于空同时被取消
         if (packet != null && packet.isCanceled()) {
             // 已取消，不用发送
@@ -56,34 +77,19 @@ public class AsyncSendDispatcher implements SendDispatcher, IOParameter.IOParaEv
         return packet;
     }
 
-    private void sendNextPacket() {
-        SendPacket tempPacket = sendPacket;
-        if (tempPacket != null) {
-            CloseUtils.close(tempPacket);
-        }
-
-        SendPacket packet = takePacket();
-        sendPacket = packet;
-        if (packet == null) {
-            // 队列为空，取消状态
-            isSending.set(false);
-            return;
-        }
-
-        size = packet.length();
-        position = 0;
-        
-        sendCurrentPacket();
+    /**
+     * 完成Packet发送
+     * @param isSucceed 是否成功
+     */
+    @Override
+    public void completeSendPacket(SendPacket packet, boolean isSucceed) {
+        CloseUtils.close(packet);
     }
 
-    private void sendCurrentPacket() {
-        if (position >= size) {
-            // 如果position > size
-            // 则证明多发送了数据，同样认定为发送失败
-            completeSendPacket(position == size);
-            sendNextPacket();
-            return;
-        }
+    /**
+     * 请求网络进行数据发送
+     */
+    private void requestSend() {
         try {
             // 如果position < size，则继续发送
             // 把数据放入parameter中
@@ -94,26 +100,6 @@ public class AsyncSendDispatcher implements SendDispatcher, IOParameter.IOParaEv
         }
     }
 
-    /**
-     * 完成Packet发送
-     * @param isSucceed 是否发送成功
-     */
-    private void completeSendPacket(boolean isSucceed) {
-        SendPacket packet = this.sendPacket;
-
-        if (packet == null) {
-            return;
-        }
-
-        CloseUtils.close(packet);
-        CloseUtils.close(readChannel);
-
-        sendPacket = null;
-        readChannel = null;
-        size = 0;
-        position = 0;
-    }
-
     private void closeAndNotify() {
         CloseUtils.close(this);
     }
@@ -122,46 +108,66 @@ public class AsyncSendDispatcher implements SendDispatcher, IOParameter.IOParaEv
     public void close() throws IOException {
         if (isSending.compareAndSet(false, true)) {
             isSending.set(false);
-            // 异常关闭调用完成方法
-            completeSendPacket(false);
+            // reader调用关闭
+            reader.close();
         }
     }
 
+    /**
+     * 取消Packet操作
+     * 如果还在队列中，代表Packet未进行发送，则直接标志取消，并返回即可
+     * 如果未在队列中，则让reader尝试扫描当前发送序列，查询是否当前Packet正在发送
+     * 如果是则进行取消相关操作
+     * @param packet 数据
+     */
     @Override
     public void cancel(SendPacket packet) {
-    }
-
-    @Override
-    public IOParameter provideParameter() {
-        IOParameter parameter = ioParameter;
-        if (readChannel == null) {
-            readChannel = Channels.newChannel(sendPacket.open());
-            // 首包需要发送长度信息
-            parameter.setLimit(4);
-            parameter.writeLength((int) sendPacket.length());
-        } else {
-            parameter.setLimit((int) Math.min(parameter.capacity(), size - position));
-
-            try {
-                int len = parameter.readFrom(readChannel);
-                position += len;
-            } catch (IOException e) {
-                e.printStackTrace();
-                return null;
-            }
+        boolean ret;
+        synchronized (queueLock) {
+            ret = queue.remove(packet);
+        }
+        // 返回true表示此Packet已从队列中移除
+        if (ret) {
+            packet.cancel();
+            return;
         }
 
-        return parameter;
+        reader.cancel(packet);
     }
 
+    /**
+     * 网络发送就绪回调，当前已进入发送就绪状态，等待填充数据进行发送
+     * 此时从reader中填充数据，并进行后续网络发送
+     * @return NULL，可能填充异常，或者想要取消本次发送
+     */
+    @Override
+    public IOParameter provideParameter() {
+        return reader.fillWithData();
+    }
+
+    /**
+     * 网络发送IoArgs出现异常
+     *
+     * @param parameter parameter
+     * @param e         异常信息
+     */
     @Override
     public void onConsumeFailed(IOParameter parameter, Exception e) {
-        e.printStackTrace();
+        if (parameter != null) {
+            e.printStackTrace();
+        } else {
+            // TODO
+        }
     }
 
+    /**
+     * 完成Packet发送
+     */
     @Override
     public void onConsumeCompleted(IOParameter parameter) {
         // 继续发送当前包
-        sendCurrentPacket();
+        if (reader.requestTakePacket()) {
+            requestSend();
+        }
     }
 }

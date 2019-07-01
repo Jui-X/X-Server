@@ -1,5 +1,6 @@
 import Utils.CloseUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
@@ -22,14 +23,17 @@ import java.util.concurrent.TimeUnit;
  **/
 public class TCPServer implements ClientHandler.ClientHandlerCallBack{
     private final int port;
+    // 缓存文件目录
+    private final File cachePath;
+    private final ExecutorService forwardThreadPoolExecutor;
     private ClientListener listener;
     private List<ClientHandler> clientHandlerList = new ArrayList<ClientHandler>();
-    private final ExecutorService forwardThreadPoolExecutor;
     private Selector selector;
     private ServerSocketChannel server;
 
-    public TCPServer(int port) {
+    public TCPServer(int port, File cachePath) {
         this.port = port;
+        this.cachePath = cachePath;
         this.forwardThreadPoolExecutor = new ThreadPoolExecutor(5, 5,
                 10000, TimeUnit.MILLISECONDS, new LinkedBlockingDeque<>());
     }
@@ -92,7 +96,6 @@ public class TCPServer implements ClientHandler.ClientHandlerCallBack{
 
     @Override
     public void onNewMessageArrived(ClientHandler clientHandler, final String msg) {
-
         // 线程池异步提交转发任务
         forwardThreadPoolExecutor.execute(() -> {
             synchronized (TCPServer.this) {
@@ -140,7 +143,8 @@ public class TCPServer implements ClientHandler.ClientHandlerCallBack{
                             // 服务端异步构建线程处理请求
                             try {
                                 // 构建新的ClientHandler线程处理客户端请求
-                                ClientHandler clientHandler = new ClientHandler(socketChannel, TCPServer.this);
+                                ClientHandler clientHandler = new ClientHandler(cachePath, socketChannel,
+                                        TCPServer.this);
                                 // 添加同步处理
                                 synchronized (TCPServer.this) {
                                     clientHandlerList.add(clientHandler);

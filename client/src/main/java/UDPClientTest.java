@@ -1,3 +1,4 @@
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +13,8 @@ public class UDPClientTest {
     private static boolean done;
 
     public static void main(String[] args) throws IOException {
+        // 缓存文件目录
+        File cachePath = Xyz.getCacheDir("client/test");
         ServerInfo info = UDPClientSearcher.searchServer(5000);
         System.out.println("UDPClientTest => Server:" + info);
 
@@ -24,7 +27,7 @@ public class UDPClientTest {
         final List<TCPClient> tcpClientList = new ArrayList<>();
         for (int i = 0; i < 3; i++) {
             try {
-                TCPClient client = TCPClient.startWith(info);
+                TCPClient client = TCPClient.startWith(info, cachePath);
                 if (client == null) {
                     System.out.println("UDPClientTest => 连接异常！");
                     continue;

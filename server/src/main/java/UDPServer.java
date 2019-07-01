@@ -2,6 +2,7 @@ import core.IOContext;
 import impl.IOSelectorProvider;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
@@ -16,12 +17,14 @@ import static Enum.Enum.*;
 public class UDPServer {
 
     public static void main(String[] args) throws IOException {
+        // 缓存文件目录
+        File cachePath = Xyz.getCacheDir("server");
         IOContext.setup()
                 .ioProvider(new IOSelectorProvider())
                 .start();
 
         // 根据端口构建TCP Server
-        TCPServer tcpServer = new TCPServer(TCP_PORT.getValue());
+        TCPServer tcpServer = new TCPServer(TCP_PORT.getValue(), cachePath);
         boolean isSucceed = tcpServer.start();
         if (!isSucceed) {
             System.out.println("UDPServer => TCP Server start failed...");
@@ -36,9 +39,12 @@ public class UDPServer {
         do {
             // 从键盘读取输入并将输入广播到所有客户端
             str = bufferedReader.readLine();
+            if (end.equalsIgnoreCase(str)) {
+                break;
+            }
             // 调用WriteHandler将收到的信息广播出去
             tcpServer.broadcast(str);
-        } while (!end.equalsIgnoreCase(str));
+        } while (true);
 
         UDPServerProvider.stop();
         tcpServer.stop();

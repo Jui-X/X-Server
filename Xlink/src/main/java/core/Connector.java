@@ -83,7 +83,7 @@ public abstract class Connector implements Closeable, SocketChannelAdapter.OnCha
     protected abstract File createNewReceiveFile();
 
     protected void receiveNewPacket(ReceivePacket packet) {
-        System.out.println(key.toString() + ": [New Packet]-Type: "+ packet.type() + ", Length: " + packet.length);
+        System.out.println("Connector => " + key.toString() + ": [New Packet]-Type: "+ packet.type() + ", Length: " + packet.length);
     }
 
     @Override

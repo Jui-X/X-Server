@@ -22,8 +22,6 @@ public class UDPClient {
 
         // 超时时间设置为10s
         ServerInfo serverInfo = UDPClientSearcher.searchServer(5000);
-        System.out.println("UDPClient => TCP Client \t ip: " + serverInfo.getAddress() + "\tport: " + serverInfo.getPort()
-                + "\tserver_index: " + serverInfo.getServer_index());
 
         if (serverInfo != null) {
             TCPClient tcpClient = null;
@@ -72,11 +70,8 @@ public class UDPClient {
                 }
             }
 
-            // 发送到服务器
-            client.send("1: " + str);
-            client.send("2: " + str);
-            client.send("3: " + str);
-            client.send("4: " + str);
+            // 发送字符串到服务器
+            client.send(str);
 
         } while (true);
     }

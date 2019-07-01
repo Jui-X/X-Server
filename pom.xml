@@ -26,8 +26,6 @@
         <module>common</module>
         <module>Xlink</module>
         <module>NIOServer</module>
-        <module>NIO-Advance</module>
-        <module>NIOAdvance</module>
         <module>NIOPlus</module>
         <module>Xyz</module>
     </modules>
@@ -37,12 +35,6 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>1.18.6</version>
-        </dependency>
-        <dependency>
-            <groupId>com.juix</groupId>
-            <artifactId>Xlink</artifactId>
-            <version>1.0-SNAPSHOT</version>
-            <scope>compile</scope>
         </dependency>
     </dependencies>
 </project>

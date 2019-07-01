@@ -39,57 +39,6 @@ public class SocketChannelAdapter implements Sender, Receiver, Closeable {
         this.listener = listener;
     }
 
-    private final IOProvider.HandleInputCallback inputCallback = new IOProvider.HandleInputCallback() {
-        @Override
-        protected void provideInput() {
-            if (isClosed.get()) {
-                return;
-            }
-            // 此处receiveEventListener来自外层Connector的监听事件echoReceiveListener
-            IOParameter.IOParaEventProcessor processor = receiveIOEventProcessor;
-
-            IOParameter parameter = processor.provideParameter();
-
-            try {
-                // 具体的读取操作
-                if (parameter.readFrom(channel) > 0 && listener != null) {
-                    // 读取完成回调
-                    processor.onConsumeCompleted(parameter);
-                } else {
-                    // Channel可读情况下没有读到任何信息
-                    processor.onConsumeFailed(parameter, new IOException("Cannot readFrom any data!"));
-                }
-            } catch (IOException e) {
-                CloseUtils.close(SocketChannelAdapter.this);
-            }
-        }
-    };
-
-    private final IOProvider.HandleOutputCallback outputCallback = new IOProvider.HandleOutputCallback() {
-        @Override
-        protected void provideOutput() {
-            if (isClosed.get()) {
-                return;
-            }
-            // 此处receiveEventListener来自外层Connector的监听事件echoReceiveListener
-            IOParameter.IOParaEventProcessor processor = sendIOEventProcessor;
-
-            // 从回调中得到发送数据的parameter
-            IOParameter parameter = processor.provideParameter();
-
-            try {
-                if (parameter.writeTo(channel) > 0) {
-                    // 写入完成回调
-                    processor.onConsumeCompleted(parameter);
-                } else {
-                    processor.onConsumeFailed(parameter, new IOException("Cannot write any data!"));
-                }
-            } catch (IOException e) {
-                CloseUtils.close(SocketChannelAdapter.this);
-            }
-        }
-    };
-
     @Override
     public void close() throws IOException {
         if (isClosed.compareAndSet(false, true)) {
@@ -116,6 +65,34 @@ public class SocketChannelAdapter implements Sender, Receiver, Closeable {
         return IOProvider.registerInput(channel, inputCallback);
     }
 
+    private final IOProvider.HandleInputCallback inputCallback = new IOProvider.HandleInputCallback() {
+        @Override
+        protected void provideInput() {
+            if (isClosed.get()) {
+                return;
+            }
+            // 此处receiveEventListener来自外层Connector的监听事件echoReceiveListener
+            IOParameter.IOParaEventProcessor processor = receiveIOEventProcessor;
+
+            IOParameter parameter = processor.provideParameter();
+
+            try {
+                // 具体的读取操作
+                if (parameter == null) {
+                    processor.onConsumeFailed(null, new IOException("Provide IOParameter is null..."));
+                } else if (parameter.readFrom(channel) > 0 && listener != null) {
+                    // 读取完成回调
+                    processor.onConsumeCompleted(parameter);
+                } else {
+                    // Channel可读情况下没有读到任何信息
+                    processor.onConsumeFailed(parameter, new IOException("Cannot readFrom any data!"));
+                }
+            } catch (IOException e) {
+                CloseUtils.close(SocketChannelAdapter.this);
+            }
+        }
+    };
+
     @Override
     public void setSendProcessor (IOParameter.IOParaEventProcessor processor) {
         sendIOEventProcessor = processor;
@@ -129,6 +106,31 @@ public class SocketChannelAdapter implements Sender, Receiver, Closeable {
         // 当前发送的数据添加到回调中
         return IOProvider.registerOutput(channel, outputCallback);
     }
+
+    private final IOProvider.HandleOutputCallback outputCallback = new IOProvider.HandleOutputCallback() {
+        @Override
+        protected void provideOutput() {
+            if (isClosed.get()) {
+                return;
+            }
+            // 此处receiveEventListener来自外层Connector的监听事件echoReceiveListener
+            IOParameter.IOParaEventProcessor processor = sendIOEventProcessor;
+
+            // 从回调中得到发送数据的parameter
+            IOParameter parameter = processor.provideParameter();
+
+            try {
+                if (parameter.writeTo(channel) > 0) {
+                    // 写入完成回调
+                    processor.onConsumeCompleted(parameter);
+                } else {
+                    processor.onConsumeFailed(parameter, new IOException("Cannot write any data!"));
+                }
+            } catch (IOException e) {
+                CloseUtils.close(SocketChannelAdapter.this);
+            }
+        }
+    };
 
     public interface OnChannelStatusChangedListener {
         void onChannelClosed(SocketChannel channel);
