@@ -179,9 +179,21 @@ public class AsyncPacketReader implements Closeable {
         node = null;
     }
 
+    /**
+     * Packet提供者
+     */
     interface PacketProvider {
+        /**
+         * 拿Packet操作
+         * @return 如果队列有可以发送的Packet则返回不为null
+         */
         SendPacket takePacket();
 
+        /**
+         * 结束一份Packet
+         * @param packet    发送包
+         * @param isSucceed 是否成功发送完成
+         */
         void completeSendPacket(SendPacket packet, boolean isSucceed);
     }
 }

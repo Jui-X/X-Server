@@ -148,10 +148,27 @@ public class IOParameter {
         return buffer.remaining() > 0;
     }
 
+    /**
+     * 填充数据
+     * @param size 想要填充数据的长度
+     * @return 真实填充数据的长度
+     */
     public int fillWithEmpty(int size) {
         int fillSize = Math.min(size, buffer.remaining());
         buffer.position(buffer.position() + fillSize);
         return fillSize;
+    }
+
+    /**
+     * 清空部分数据
+     *
+     * @param size 想要清空的数据长度
+     * @return 真实清空的数据长度
+     */
+    public int setEmpty(int size) {
+        int emptySize = Math.min(size, buffer.remaining());
+        buffer.position(buffer.position() + emptySize);
+        return emptySize;
     }
 
     /**

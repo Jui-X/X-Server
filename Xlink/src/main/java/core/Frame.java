@@ -105,4 +105,6 @@ public abstract class Frame {
      * @return NULL：没有待消费的帧
      */
     public abstract Frame nextFrame();
+
+    public abstract int getConsumableLength();
 }

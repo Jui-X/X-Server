@@ -1,11 +1,12 @@
 package impl.async;
 
 import Utils.CloseUtils;
-import core.*;
+import core.IOParameter;
+import core.ReceiveDispatcher;
+import core.ReceivePacket;
+import core.Receiver;
 
 import java.io.IOException;
-import java.nio.channels.Channels;
-import java.nio.channels.WritableByteChannel;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -14,7 +15,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author: KingJ
  * @create: 2019-06-28 22:09
  **/
-public class AsyncReceiveDispatcher implements ReceiveDispatcher, IOParameter.IOParaEventProcessor {
+public class AsyncReceiveDispatcher implements ReceiveDispatcher, IOParameter.IOParaEventProcessor,
+        AsyncPacketWriter.PacketProvider {
     private final AtomicBoolean isClosed = new AtomicBoolean(false);
 
     // 接收者
@@ -22,16 +24,7 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher, IOParameter.IO
     // 接收回调
     private final ReceivePacketCallback callback;
 
-    // 接收数据
-    private IOParameter parameter = new IOParameter();
-    // 当前正在接受的packet
-    private ReceivePacket<?, ?> receivePacket;
-    //
-    private WritableByteChannel writeChannel;
-    // 读取数据的大小
-    private long size;
-    // 当前读取位置
-    private long position;
+    private final AsyncPacketWriter writer = new AsyncPacketWriter(this);
 
     public AsyncReceiveDispatcher(Receiver receiver, ReceivePacketCallback callback) {
         this.receiver = receiver;
@@ -68,75 +61,13 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher, IOParameter.IO
     @Override
     public void close() throws IOException {
         if (isClosed.compareAndSet(false, true)) {
-            completeReceivePacket(false);
-        }
-    }
-
-    /**
-     * 解析数据到Packet
-     * @param parameter
-     */
-    private void assemblePacket(IOParameter parameter) {
-        if (receivePacket == null) {
-            // 读取报文长度
-            int length = parameter.readLength();
-            // 根据文件长度暂时判断是文件类型还是String类型
-            byte type = length > 200 ? Packet.TYPE_STREAM_FILE : Packet.TYPE_MEMORY_STRING;
-
-            receivePacket = callback.onNewPacketArrived(type, length);
-            writeChannel = Channels.newChannel(receivePacket.open());
-            size = length;
-            position = 0;
-        }
-
-        try {
-            int len = parameter.writeTo(writeChannel);
-
-            position += len;
-
-            if (position == size) {
-                // 检查是否完成一份Packet的接收
-                completeReceivePacket(true);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            completeReceivePacket(false);
-        }
-    }
-
-    /**
-     * 完成数据接收操作
-     */
-    private void completeReceivePacket(boolean isSucceed) {
-        ReceivePacket packet = this.receivePacket;
-        CloseUtils.close(packet);
-        receivePacket = null;
-
-        WritableByteChannel channel = this.writeChannel;
-        CloseUtils.close(channel);
-        writeChannel = null;
-
-        if (packet != null) {
-            // 调用callback函数告诉外层有新的数据接收完成
-            callback.onReceivePacketCompleted(packet);
+            writer.close();
         }
     }
 
     @Override
     public IOParameter provideParameter() {
-        IOParameter ioParameter = parameter;
-
-        int receiveSize;
-        if (receivePacket == null) {
-            // 最小长度为4，一个int的长度
-            receiveSize = 4;
-        } else {
-            receiveSize = (int) Math.min(size - position, parameter.capacity());
-        }
-        // 设置本次接收大小
-        parameter.setLimit(receiveSize);
-
-        return ioParameter;
+        return writer.takeIOParameter();
     }
 
     @Override
@@ -146,8 +77,22 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher, IOParameter.IO
 
     @Override
     public void onConsumeCompleted(IOParameter parameter) {
-        assemblePacket(parameter);
+        do {
+            writer.consumeIOParameter(parameter);
+        } while (parameter.remained());
+
         // 接收下一条数据
         registerReceive();
+    }
+
+    @Override
+    public ReceivePacket takePacket(byte type, long length, byte[] headerInfo) {
+        return callback.onNewPacketArrived(type, length);
+    }
+
+    @Override
+    public void completeReceivePacket(ReceivePacket packet, boolean isSucceed) {
+        CloseUtils.close(packet);
+        callback.onReceivePacketCompleted(packet);
     }
 }

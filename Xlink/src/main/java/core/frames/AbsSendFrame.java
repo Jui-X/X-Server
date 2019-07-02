@@ -60,6 +60,11 @@ public abstract class AbsSendFrame extends Frame {
         return (byte) parameter.readFrom(header, offset, count);
     }
 
+    @Override
+    public int getConsumableLength() {
+        return headerRemaining + bodyRemaining;
+    }
+
     protected abstract int consumeBody(IOParameter parameter) throws IOException;
 
     /**
