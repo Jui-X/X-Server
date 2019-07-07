@@ -173,6 +173,8 @@ public class AsyncPacketReader implements Closeable {
                 SendPacket packet = ((AbsSendPacketFrame) frame).getPacket();
                 provider.completeSendPacket(packet, false);
             }
+            // 修复bug1：Frame所在链表中无限循环头部节点
+            node = node.next;
         }
 
         nodeSize = 0;

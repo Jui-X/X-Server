@@ -2,22 +2,18 @@
 <project version="4">
   <component name="CompilerConfiguration">
     <annotationProcessing>
-      <profile default="true" name="Default" enabled="true" />
       <profile name="Maven default annotation processors profile" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="NIOServer" />
         <module name="common" />
-        <module name="Common" />
         <module name="NIOPlus" />
         <module name="Xyz" />
         <module name="Xlink" />
         <module name="server" />
         <module name="client" />
-        <module name="Client" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel target="8" />
   </component>
 </project>

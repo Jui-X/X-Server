@@ -1,4 +1,5 @@
 import Utils.CloseUtils;
+import handler.ClientHandler;
 
 import java.io.File;
 import java.io.IOException;
@@ -8,7 +9,6 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -21,14 +21,14 @@ import java.util.concurrent.TimeUnit;
  * @author: KingJ
  * @create: 2019-05-27 16:39
  **/
-public class TCPServer implements ClientHandler.ClientHandlerCallBack{
+public class TCPServer implements ClientHandler.ClientHandlerCallBack, ServerAcceptor.AcceptListener {
     private final int port;
     // 缓存文件目录
     private final File cachePath;
     private final ExecutorService forwardThreadPoolExecutor;
-    private ClientListener listener;
     private List<ClientHandler> clientHandlerList = new ArrayList<ClientHandler>();
     private Selector selector;
+    private ServerAcceptor acceptor;
     private ServerSocketChannel server;
 
     public TCPServer(int port, File cachePath) {
@@ -105,70 +105,18 @@ public class TCPServer implements ClientHandler.ClientHandlerCallBack{
         });
     }
 
-    private class ClientListener extends Thread {
-        private boolean done = false;
-
-        @Override
-        public void run() {
-            super.run();
-
-            Selector selector = TCPServer.this.selector;
-            System.out.println("TCPServer => TCP Server is ready.");
-            // 等待客户端连接
-            do {
-                try {
-                    // 轮询结果，返回已就绪的Channel数量
-                    // 0表示没有Channel就绪
-                    if (selector.select() == 0) {
-                        if (done) {
-                            break;
-                        }
-                        continue;
-                    }
-                    Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
-                    while (iterator.hasNext()) {
-                        if (done) {
-                            break;
-                        }
-
-                        SelectionKey key = iterator.next();
-                        iterator.remove();
-
-                        // 关注当前Key的状态是否是已建立连接的状态
-                        if (key.isAcceptable()) {
-                            ServerSocketChannel server = (ServerSocketChannel) key.channel();
-                            // 建立客户端过来的SocketChannel
-                            SocketChannel socketChannel = server.accept();
-
-                            // 服务端异步构建线程处理请求
-                            try {
-                                // 构建新的ClientHandler线程处理客户端请求
-                                ClientHandler clientHandler = new ClientHandler(cachePath, socketChannel,
-                                        TCPServer.this);
-                                // 添加同步处理
-                                synchronized (TCPServer.this) {
-                                    clientHandlerList.add(clientHandler);
-                                }
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                                System.out.println("TCPServer => TCP Client Error. " + e.getMessage());
-                            }
-                        }
-                    }
-                } catch (IOException e) {
-                    continue;
-                }
-
-            } while (!done);
-            System.out.println("TCPServer => TCP Server exit.");
-        }
-
-        void exit() {
-            done = true;
-
-            selector.wakeup();
+    @Override
+    public void newSocketArrived(SocketChannel channel) {
+        try {
+            ClientHandler clientHandler = new ClientHandler(cachePath, channel, this);
+            System.out.println(clientHandler.getClientInfo() + " Connect!");
+            synchronized (TCPServer.this) {
+                clientHandlerList.add(clientHandler);
+                System.out.println("当前客户端数量：" + clientHandlerList.size());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println("客户端链接异常：" + e.getMessage());
         }
     }
-
-
 }

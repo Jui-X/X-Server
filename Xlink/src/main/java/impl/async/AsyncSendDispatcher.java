@@ -26,8 +26,6 @@ public class AsyncSendDispatcher implements SendDispatcher, IOParameter.IOParaEv
 
     private AsyncPacketReader reader = new AsyncPacketReader(this);
 
-    public final Object queueLock = new Object();
-
     public AsyncSendDispatcher(Sender sender) {
         this.sender = sender;
         sender.setSendProcessor(this);
@@ -42,15 +40,9 @@ public class AsyncSendDispatcher implements SendDispatcher, IOParameter.IOParaEv
      */
     @Override
     public void send(SendPacket packet) {
-        synchronized (queueLock) {
-            // 将需要发送的packet存入队列
-            queue.offer(packet);
-            if (isSending.compareAndSet(false, true)) {
-                if (reader.requestTakePacket()) {
-                    requestSend();
-                }
-            }
-        }
+        // 将需要发送的packet存入队列
+        queue.offer(packet);
+        requestSend();
     }
 
     /**
@@ -59,14 +51,9 @@ public class AsyncSendDispatcher implements SendDispatcher, IOParameter.IOParaEv
      */
     @Override
     public SendPacket takePacket() {
-        SendPacket packet;
-        synchronized (queueLock) {
-            packet = queue.poll();
-            if (packet == null) {
-                // 队列为空，取消发送状态
-                isSending.set(false);
-                return null;
-            }
+        SendPacket packet = queue.poll();
+        if (packet == null) {
+            return null;
         }
         // packet不等于空同时被取消
         if (packet != null && packet.isCanceled()) {
@@ -90,13 +77,24 @@ public class AsyncSendDispatcher implements SendDispatcher, IOParameter.IOParaEv
      * 请求网络进行数据发送
      */
     private void requestSend() {
-        try {
-            // 如果position < size，则继续发送
-            // 把数据放入parameter中
-            // 再进行注册监听，当可以发送的时候就发送数据，并回调发送完成的状态
-            sender.postSendAsync();
-        } catch (IOException e) {
-            closeAndNotify();
+        synchronized (isSending) {
+            if (isSending.get() || isClosed.get()) {
+                return;
+            }
+
+            if (reader.requestTakePacket()) {
+                try {
+                    // 如果position < size，则继续发送
+                    // 把数据放入parameter中
+                    // 再进行注册监听，当可以发送的时候就发送数据，并回调发送完成的状态
+                    boolean isSucceed = sender.postSendAsync();
+                    if (isSucceed) {
+                        isSending.set(true);
+                    }
+                } catch (IOException e) {
+                    closeAndNotify();
+                }
+            }
         }
     }
 
@@ -105,11 +103,15 @@ public class AsyncSendDispatcher implements SendDispatcher, IOParameter.IOParaEv
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         if (isSending.compareAndSet(false, true)) {
-            isSending.set(false);
             // reader调用关闭
             reader.close();
+            // 清空队列防止内存泄漏
+            queue.clear();
+            synchronized (isSending) {
+                isSending.set(false);
+            }
         }
     }
 
@@ -122,10 +124,7 @@ public class AsyncSendDispatcher implements SendDispatcher, IOParameter.IOParaEv
      */
     @Override
     public void cancel(SendPacket packet) {
-        boolean ret;
-        synchronized (queueLock) {
-            ret = queue.remove(packet);
-        }
+        boolean ret = queue.remove(packet);
         // 返回true表示此Packet已从队列中移除
         if (ret) {
             packet.cancel();
@@ -142,7 +141,7 @@ public class AsyncSendDispatcher implements SendDispatcher, IOParameter.IOParaEv
      */
     @Override
     public IOParameter provideParameter() {
-        return reader.fillWithData();
+        return isClosed.get() ? null : reader.fillWithData();
     }
 
     /**
@@ -153,11 +152,12 @@ public class AsyncSendDispatcher implements SendDispatcher, IOParameter.IOParaEv
      */
     @Override
     public void onConsumeFailed(IOParameter parameter, Exception e) {
-        if (parameter != null) {
-            e.printStackTrace();
-        } else {
-            // TODO
+        e.printStackTrace();
+        synchronized (isSending) {
+            isSending.set(false);
         }
+        // 继续请求发送当前的数据
+        requestSend();
     }
 
     /**
@@ -165,9 +165,11 @@ public class AsyncSendDispatcher implements SendDispatcher, IOParameter.IOParaEv
      */
     @Override
     public void onConsumeCompleted(IOParameter parameter) {
-        // 继续发送当前包
-        if (reader.requestTakePacket()) {
-            requestSend();
+        // 设置发送当前状态
+        synchronized (isSending) {
+            isSending.set(false);
         }
+        // 继续请求发送当前的数据
+        requestSend();
     }
 }

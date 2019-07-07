@@ -39,9 +39,13 @@ public class UDPServer {
         do {
             // 从键盘读取输入并将输入广播到所有客户端
             str = bufferedReader.readLine();
-            if (end.equalsIgnoreCase(str)) {
+            if (str == null || end.equalsIgnoreCase(str)) {
                 break;
             }
+            if (str.length() == 0) {
+                continue;
+            }
+
             // 调用WriteHandler将收到的信息广播出去
             tcpServer.broadcast(str);
         } while (true);

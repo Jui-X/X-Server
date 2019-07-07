@@ -53,8 +53,11 @@ public class UDPClient {
             // 从键盘读取一行
             String str = bufferedReader.readLine();
             String end = "byebye";
-            if (end.equalsIgnoreCase(str)) {
+            if (str == null || end.equalsIgnoreCase(str)) {
                 break;
+            }
+            if (str.length() == 0) {
+                continue;
             }
 
             if (str.startsWith("-f")) {

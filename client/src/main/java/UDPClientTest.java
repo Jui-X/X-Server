@@ -1,3 +1,6 @@
+import core.IOContext;
+import impl.IOSelectorProvider;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -15,6 +18,10 @@ public class UDPClientTest {
     public static void main(String[] args) throws IOException {
         // 缓存文件目录
         File cachePath = Xyz.getCacheDir("client/test");
+        IOContext.setup()
+                .ioProvider(new IOSelectorProvider())
+                .start();
+
         ServerInfo info = UDPClientSearcher.searchServer(5000);
         System.out.println("UDPClientTest => Server:" + info);
 
@@ -25,24 +32,18 @@ public class UDPClientTest {
         // 当前连接数量
         int size = 0;
         final List<TCPClient> tcpClientList = new ArrayList<>();
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 20; i++) {
             try {
                 TCPClient client = TCPClient.startWith(info, cachePath);
                 if (client == null) {
-                    System.out.println("UDPClientTest => 连接异常！");
-                    continue;
+                    throw new NullPointerException();
                 }
 
                 tcpClientList.add(client);
                 System.out.println("UDPClientTest => 连接成功：" + (++size));
-            } catch (IOException e) {
+            } catch (IOException | NullPointerException e) {
                 System.out.println("UDPClientTest => 连接异常！");
-            }
-
-            try {
-                Thread.sleep(20);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                break;
             }
         }
 
@@ -77,5 +78,7 @@ public class UDPClientTest {
         for (TCPClient client : tcpClientList) {
             client.exit();
         }
+
+        IOContext.close();
     }
 }

@@ -100,6 +100,9 @@ public class AsyncPacketWriter implements Closeable {
             short identifier = frame.getFrameIdentifier();
             int length = frame.getFrameBodyLength();
             PacketInfo packetInfo = packetMap.get(identifier);
+            if (packetInfo == null) {
+                return;
+            }
             packetInfo.unReceivedLength = length;
             if (packetInfo.unReceivedLength <= 0) {
                 provider.completeReceivePacket(packetInfo.packet, true);

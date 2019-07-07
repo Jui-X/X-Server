@@ -4,11 +4,9 @@ import core.IOProvider;
 import Utils.CloseUtils;
 
 import java.io.IOException;
-import java.nio.channels.ClosedChannelException;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.SocketChannel;
+import java.nio.channels.*;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.*;
@@ -53,71 +51,92 @@ public class IOSelectorProvider implements IOProvider {
         startWrite();
     }
 
-    private void startRead() {
-        Thread thread = new Thread("Xlink IOSelectorProvider ReadSelector Thread") {
-            @Override
-            public void run() {
-                while (!isClosed.get()) {
-                    try {
-                        if (readSelector.select() == 0) {
-                            // 判断是否处于input注册的过程
-                            waitSelection(inRegisterInput);
-                            continue;
-                        }
+    static class SelectThread extends Thread {
+        private final AtomicBoolean isClosed;
+        private final AtomicBoolean locker;
+        private final Selector selector;
+        private final HashMap<SelectionKey, Runnable> map;
+        private final ExecutorService pool;
+        private final int keyOps;
 
-                        Set<SelectionKey> selectionKeys = readSelector.selectedKeys();
-                        for (SelectionKey selectionKey : selectionKeys) {
-                            if (selectionKey.isValid()) {
-                                handleSelection(selectionKey, SelectionKey.OP_READ, inputCallbackMap,
-                                        inputHandlerPool);
-                            }
-                        }
-                        selectionKeys.clear();
-                    } catch (IOException e) {
-                        e.printStackTrace();
+        SelectThread(String name, AtomicBoolean isClosed, AtomicBoolean locker, Selector selector, HashMap<SelectionKey, Runnable> map, ExecutorService pool, int keyOps) {
+            super(name);
+            this.isClosed = isClosed;
+            this.locker = locker;
+            this.selector = selector;
+            this.map = map;
+            this.pool = pool;
+            this.keyOps = keyOps;
+        }
+
+        @Override
+        public void run() {
+            super.run();
+            // 将所有类变量写作成员变量，减少循环过程中对所有成员变量扫描的一个消耗
+            AtomicBoolean locker = this.locker;
+            AtomicBoolean isClosed = this.isClosed;
+            Selector selector = this.selector;
+            HashMap<SelectionKey, Runnable> callMap = this.map;
+            ExecutorService pool = this.pool;
+            int keyOps = this.keyOps;
+
+            while (!isClosed.get()) {
+                try {
+                    if (selector.select() == 0) {
+                        // 判断是否处于input注册的过程
+                        // 等待input register的过程结束后，释放锁locker即inRegisterInput
+                        waitSelection(locker);
+                        continue;
+                    } else if (locker.get()) {
+                        // 等待select()操作完并将可消费的时间消费掉
+                        waitSelection(locker);
                     }
+
+                    Set<SelectionKey> selectionKeys = selector.selectedKeys();
+                    // 使用迭代器防止在循环过程中对SelectionKey进行修改而引发的bug
+                    Iterator<SelectionKey> iterator = selectionKeys.iterator();
+                    while (iterator.hasNext()) {
+                        SelectionKey key = iterator.next();
+                        if (key.isValid()) {
+                            handleSelection(key, SelectionKey.OP_READ, map, pool, locker);
+                        }
+                        iterator.remove();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (ClosedSelectorException ignored) {
+                    break;
                 }
             }
-        };
-        thread.setPriority(Thread.MAX_PRIORITY);
+        }
+    }
+
+    private void startRead() {
+        Thread thread = new SelectThread("Xlink IOSelectorProvider ReadSelector Thread",
+                isClosed, inRegisterInput, readSelector, inputCallbackMap, inputHandlerPool,
+                SelectionKey.OP_READ);
         thread.start();
     }
 
     private void startWrite() {
-        Thread thread = new Thread("Xlink IOSelectorProvider WriteSelector Thread") {
-            @Override
-            public void run() {
-                while (!isClosed.get()) {
-                    try {
-                        if (writeSelector.select() == 0) {
-                            // 检查是否处于output的注册过程
-                            waitSelection(inRegisterOutput);
-                            continue;
-                        }
-
-                        Set<SelectionKey> selectionKeys = writeSelector.selectedKeys();
-                        for (SelectionKey selectionKey : selectionKeys) {
-                            if (selectionKey.isValid()) {
-                                handleSelection(selectionKey, SelectionKey.OP_WRITE, outputCallbackMap,
-                                        outputHandlerPool);
-                            }
-                        }
-                        selectionKeys.clear();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        };
-        thread.setPriority(Thread.MAX_PRIORITY);
+        Thread thread = new SelectThread("Xlink IOSelectorProvider WriteSelector Thread",
+                isClosed, inRegisterOutput, writeSelector, outputCallbackMap, outputHandlerPool,
+                SelectionKey.OP_WRITE);
         thread.start();
     }
 
     private static void handleSelection(SelectionKey key, int opRead,
                                         HashMap<SelectionKey, Runnable> map,
-                                        ExecutorService pool) {
-        // 取消对keyOps的监听
-        key.interestOps(key.readyOps() & ~opRead);
+                                        ExecutorService pool, AtomicBoolean locker) {
+        synchronized (locker) {
+            try {
+                // 取消对keyOps的监听
+                key.interestOps(key.readyOps() & ~opRead);
+            } catch (CancelledKeyException e) {
+                // 当发现key已经被关闭时，直接返回无需进行后续操作
+                return;
+            }
+        }
 
         Runnable runnable = null;
         try {
@@ -145,14 +164,14 @@ public class IOSelectorProvider implements IOProvider {
     }
 
     @Override
-    public boolean registerInput(SocketChannel channel, HandleInputCallback callback) throws IOException {
+    public boolean registerInput(SocketChannel channel, HandleProvideCallback callback) throws IOException {
 
         return registerSelectionKey(channel, readSelector, SelectionKey.OP_READ, inRegisterInput,
                 inputCallbackMap, inputHandlerPool, callback) != null;
     }
 
     @Override
-    public boolean registerOutput(SocketChannel channel, HandleOutputCallback callback) {
+    public boolean registerOutput(SocketChannel channel, HandleProvideCallback callback) {
 
         return registerSelectionKey(channel, writeSelector, SelectionKey.OP_WRITE, inRegisterOutput,
                 outputCallbackMap, outputHandlerPool, callback) != null;
@@ -191,7 +210,7 @@ public class IOSelectorProvider implements IOProvider {
                 }
 
                 return key;
-            } catch (ClosedChannelException e) {
+            } catch (ClosedChannelException | CancelledKeyException | ClosedSelectorException e) {
                 return null;
             } finally {
                 // 解除锁定
@@ -206,27 +225,38 @@ public class IOSelectorProvider implements IOProvider {
 
     @Override
     public void unregisterInput(SocketChannel channel) {
-        unregisterSelection(channel, readSelector, inputCallbackMap);
+        unregisterSelection(channel, readSelector, inputCallbackMap, inRegisterInput);
     }
 
     @Override
     public void unregisterOutput(SocketChannel channel) {
-        unregisterSelection(channel, writeSelector, outputCallbackMap);
+        unregisterSelection(channel, writeSelector, outputCallbackMap, inRegisterOutput);
     }
 
     private static void unregisterSelection(SocketChannel channel, Selector selector,
-                                            Map<SelectionKey, Runnable> map) {
-        if (channel.isRegistered()) {
-            SelectionKey key = channel.keyFor(selector);
-            if (key != null) {
-                // 取消监听
-                // 读和写两种操作分离到两个Selector上
-                // cancel()方法会取消Selector上的所有事件
-                key.cancel();
-                // 移除selection key
-                map.remove(key);
-                // 解除阻塞状态，继续下次select操作
-                selector.wakeup();
+                                            Map<SelectionKey, Runnable> map, AtomicBoolean locker) {
+        synchronized (locker) {
+            locker.set(true);
+            // 解除阻塞状态，继续下次select操作
+            selector.wakeup();
+            try {
+                if (channel.isRegistered()) {
+                    SelectionKey key = channel.keyFor(selector);
+                    if (key != null) {
+                        // 取消监听
+                        // 读和写两种操作分离到两个Selector上
+                        // cancel()方法会取消Selector上的所有事件
+                        key.cancel();
+                        // 移除selection key
+                        map.remove(key);
+                    }
+                }
+            } finally {
+                locker.set(false);
+                try {
+                    locker.notifyAll();
+                } catch (Exception ignored) {
+                }
             }
         }
     }
@@ -239,9 +269,6 @@ public class IOSelectorProvider implements IOProvider {
 
             inputCallbackMap.clear();
             outputCallbackMap.clear();
-
-            readSelector.wakeup();
-            writeSelector.wakeup();
 
             CloseUtils.close(readSelector);
             CloseUtils.close(writeSelector);

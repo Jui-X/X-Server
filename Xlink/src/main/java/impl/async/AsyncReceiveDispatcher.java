@@ -67,7 +67,10 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher, IOParameter.IO
 
     @Override
     public IOParameter provideParameter() {
-        return writer.takeIOParameter();
+        IOParameter parameter = writer.takeIOParameter();
+        // 一份新的IOParameter需要调用一次开始写入数据的操作
+        parameter.startWriting();
+        return parameter;
     }
 
     @Override
@@ -77,9 +80,18 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher, IOParameter.IO
 
     @Override
     public void onConsumeCompleted(IOParameter parameter) {
+        if (isClosed.get()) {
+            return;
+        }
+
+        // 消费数据之前表示parameter数据填充完成
+        // 改变未消费数据状态
+        parameter.finishWriting();
+
+        // 修复bug2：防止在消费数据过程中已被关闭
         do {
             writer.consumeIOParameter(parameter);
-        } while (parameter.remained());
+        } while (parameter.remained() && !isClosed.get());
 
         // 接收下一条数据
         registerReceive();
