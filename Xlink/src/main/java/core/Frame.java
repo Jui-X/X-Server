@@ -27,7 +27,13 @@ public abstract class Frame {
 
     public static final byte FLAG = 0;
 
-    // 帧头
+    // 帧头6字节固定
+    // 6字节 =
+    // 2字节：此帧长度
+    // 1字节：当前帧类型
+    // 1字节：帧的加密信息
+    // 1字节：帧的唯一标识
+    // 1字节：预留空间
     protected final byte[] header = new byte[FRAME_HEADER_LENGTH];
 
     /**

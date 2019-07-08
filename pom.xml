@@ -27,7 +27,7 @@
         <module>Xlink</module>
         <module>NIOServer</module>
         <module>NIOPlus</module>
-        <module>Xyz</module>
+        <module>x.Xyz</module>
     </modules>
 
     <dependencies>

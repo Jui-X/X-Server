@@ -4,10 +4,7 @@ import core.Frame;
 import core.IOParameter;
 import core.SendPacket;
 import core.datastructure.BytePriorityNode;
-import core.frames.AbsSendPacketFrame;
-import core.frames.CancelSendFrame;
-import core.frames.SendEntityFrame;
-import core.frames.SendHeaderFrame;
+import core.frames.*;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -87,9 +84,28 @@ public class AsyncPacketReader implements Closeable {
         }
     }
 
+    /**
+     * 请求发送一份心跳帧，若当前心跳帧已存在则不重新添加到队列
+     *
+     * @return True 添加队列成功
+     */
+    boolean requestSendHeartbeatFrame() {
+        synchronized (this) {
+            for (BytePriorityNode<Frame> x = node; x != null; x = x.next) {
+                Frame frame = x.item;
+                if (frame.getFrameType() == Frame.TYPE_COMMAND_HEARTBEAT) {
+                    return false;
+                }
+            }
+            // 添加心跳帧入链表
+            appendNewFrame(new HeartbeatSendFrame());
+            return true;
+        }
+    }
+
     private synchronized void appendNewFrame(Frame frame) {
         BytePriorityNode<Frame> newNode = new BytePriorityNode<>(frame);
-        if (newNode != null) {
+        if (node != null) {
             node.appendWithPriority(newNode);
         } else {
             node = newNode;

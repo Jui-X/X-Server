@@ -2,6 +2,7 @@ import Utils.CloseUtils;
 import core.Connector;
 import core.Packet;
 import core.ReceivePacket;
+import x.Xyz;
 
 import java.io.File;
 import java.io.IOException;
@@ -53,9 +54,10 @@ public class TCPClient extends Connector {
     @Override
     protected void receiveNewPacket(ReceivePacket packet) {
         super.receiveNewPacket(packet);
-        /*if (packet.type() == Packet.TYPE_MEMORY_STRING) {
+        if (packet.type() == Packet.TYPE_MEMORY_STRING) {
             String string = (String) packet.entity();
-        }*/
+            System.out.println(string);
+        }
     }
 
     @Override

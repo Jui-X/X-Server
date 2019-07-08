@@ -30,6 +30,9 @@ public class SocketChannelAdapter implements Sender, Receiver, Closeable {
     // 发送的回调
     private IOParameter.IOParaEventProcessor sendIOEventProcessor;
 
+    private volatile long lastReadTime = System.currentTimeMillis();
+    private volatile long lastWriteTime = System.currentTimeMillis();
+
     public SocketChannelAdapter(SocketChannel channel, core.IOProvider ioProvider,
                                 OnChannelStatusChangedListener listener) throws IOException {
         this.channel = channel;
@@ -68,12 +71,20 @@ public class SocketChannelAdapter implements Sender, Receiver, Closeable {
         return IOProvider.registerInput(channel, inputCallback);
     }
 
+    @Override
+    public long getLastReadTime() {
+        return lastReadTime;
+    }
+
     private final IOProvider.HandleProvideCallback inputCallback = new IOProvider.HandleProvideCallback() {
         @Override
         protected void provideParameter(IOParameter parameter) {
             if (isClosed.get()) {
                 return;
             }
+
+            lastReadTime = System.currentTimeMillis();
+
             // 此处receiveEventListener来自外层Connector的监听事件echoReceiveListener
             IOParameter.IOParaEventProcessor processor = receiveIOEventProcessor;
 
@@ -120,10 +131,15 @@ public class SocketChannelAdapter implements Sender, Receiver, Closeable {
         }
 
         // 进行CallBack状态监测，判断是否处于自循环状态
-        inputCallback.checkAttachNull();
+        outputCallback.checkAttachNull();
 
         // 当前发送的数据添加到回调中
         return IOProvider.registerOutput(channel, outputCallback);
+    }
+
+    @Override
+    public long getLastWriteTime() {
+        return lastWriteTime;
     }
 
     private final IOProvider.HandleProvideCallback outputCallback = new IOProvider.HandleProvideCallback() {
@@ -132,6 +148,9 @@ public class SocketChannelAdapter implements Sender, Receiver, Closeable {
             if (isClosed.get()) {
                 return;
             }
+
+            lastWriteTime = System.currentTimeMillis();
+
             // 此处receiveEventListener来自外层Connector的监听事件echoReceiveListener
             IOParameter.IOParaEventProcessor processor = sendIOEventProcessor;
 

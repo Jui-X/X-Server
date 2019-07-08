@@ -107,4 +107,9 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher, IOParameter.IO
         CloseUtils.close(packet);
         callback.onReceivePacketCompleted(packet);
     }
+
+    @Override
+    public void receiveHeartbeat() {
+        callback.onReceiveHeartbeat();
+    }
 }

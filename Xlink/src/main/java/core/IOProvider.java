@@ -51,7 +51,7 @@ public interface IOProvider extends Closeable {
          * 此时如果外层有调度注册异步发送或者接收是错误的
          */
         public void checkAttachNull() {
-            if (attach == null) {
+            if (attach != null) {
                 throw new IllegalStateException("Current attach is not empty!");
             }
         }

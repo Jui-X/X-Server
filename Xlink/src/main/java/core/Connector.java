@@ -1,5 +1,6 @@
 package core;
 
+import Utils.CloseUtils;
 import box.BytesReceivePacket;
 import box.FileReceivePacket;
 import box.StringReceivePacket;
@@ -12,6 +13,8 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -27,6 +30,7 @@ public abstract class Connector implements Closeable, SocketChannelAdapter.OnCha
     private Receiver receiver;
     private SendDispatcher sendDispatcher;
     private ReceiveDispatcher receiveDispatcher;
+    private final List<ScheduleJob> scheduleJobs = new ArrayList<>(4);
 
     public void setUp(SocketChannel channel) throws IOException {
         this.channel = channel;
@@ -54,6 +58,30 @@ public abstract class Connector implements Closeable, SocketChannelAdapter.OnCha
         sendDispatcher.send(packet);
     }
 
+    public void schedule(ScheduleJob job) {
+        synchronized (scheduleJobs) {
+            if (scheduleJobs.contains(job)) {
+                return;
+            }
+
+            IOContext ctx = IOContext.getInstance();
+            Scheduler scheduler = ctx.getScheduler();
+            job.schedule(scheduler);
+            scheduleJobs.add(job);
+        }
+    }
+
+    public void fireIdleTimeoutEvent() {
+        sendDispatcher.sendHeartbeat();
+    }
+
+    public void fireExceptionCaught() {
+    }
+
+    public long getLastActiveTime() {
+        return Math.max(sender.getLastWriteTime(), receiver.getLastReadTime());
+    }
+
     /**
      * 接收事件回调
      */
@@ -77,6 +105,11 @@ public abstract class Connector implements Closeable, SocketChannelAdapter.OnCha
         @Override
         public void onReceivePacketCompleted(ReceivePacket packet) {
             receiveNewPacket(packet);
+        }
+
+        @Override
+        public void onReceiveHeartbeat() {
+            System.out.println(key.toString() + ": [heartbeat]");
         }
     };
 
@@ -103,7 +136,13 @@ public abstract class Connector implements Closeable, SocketChannelAdapter.OnCha
      */
     @Override
     public void onChannelClosed(SocketChannel channel) {
-
+        synchronized (scheduleJobs) {
+            for (ScheduleJob scheduleJob : scheduleJobs) {
+                scheduleJob.unSchedule();
+            }
+            scheduleJobs.clear();
+        }
+        CloseUtils.close(this);
     }
 
     public UUID getKey() {

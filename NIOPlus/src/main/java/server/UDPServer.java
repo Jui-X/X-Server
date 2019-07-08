@@ -7,7 +7,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import static Enum.Enum.*;
+import static common.enums.Enum.*;
 
 /**
  * @param: none

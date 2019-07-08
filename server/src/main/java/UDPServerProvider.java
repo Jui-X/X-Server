@@ -51,8 +51,8 @@ public class UDPServerProvider {
          **/
         final byte[] buffer = new byte[256];
 
-        public Provider(int port, byte[] index) {
-            super();
+        Provider(int port, byte[] index) {
+            super("UDP-Server-UDP Provider-Thread");
             this.port = port;
             this.server_idx = index;
         }

@@ -16,5 +16,7 @@ public interface ReceiveDispatcher extends Closeable {
         ReceivePacket<?,?> onNewPacketArrived(byte type, long length);
 
         void onReceivePacketCompleted(ReceivePacket packet);
+
+        void onReceiveHeartbeat();
     }
 }

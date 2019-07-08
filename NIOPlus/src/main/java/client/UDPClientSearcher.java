@@ -12,8 +12,8 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import static Constant.Constant.HEADER;
-import static Enum.Enum.*;
+import static common.constant.Constant.*;
+import static common.enums.Enum.*;
 
 /**
  * @param: none

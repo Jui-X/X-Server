@@ -9,11 +9,13 @@
         <module name="NIOServer" />
         <module name="common" />
         <module name="NIOPlus" />
-        <module name="Xyz" />
         <module name="Xlink" />
         <module name="server" />
         <module name="client" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="Xyz" target="8" />
+    </bytecodeTargetLevel>
   </component>
 </project>

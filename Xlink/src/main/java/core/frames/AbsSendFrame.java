@@ -23,9 +23,13 @@ public abstract class AbsSendFrame extends Frame {
      * @param flag       帧的加密信息
      * @param identifier 帧的唯一标识
      */
-    public AbsSendFrame(int length, byte type, byte flag, short identifier) {
+    AbsSendFrame(int length, byte type, byte flag, short identifier) {
         super(length, type, flag, identifier);
         bodyRemaining = length;
+    }
+
+    AbsSendFrame(byte[] header) {
+        super(header);
     }
 
     @Override

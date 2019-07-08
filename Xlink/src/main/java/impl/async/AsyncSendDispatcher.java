@@ -45,6 +45,16 @@ public class AsyncSendDispatcher implements SendDispatcher, IOParameter.IOParaEv
         requestSend();
     }
 
+    @Override
+    public void sendHeartbeat() {
+        if (queue.size() > 0) {
+            return;
+        }
+        if (reader.requestSendHeartbeatFrame()) {
+            requestSend();
+        }
+    }
+
     /**
      * reader从当前队列中提取一份Packet
      * @return 如果队列有可用于发送的数据则返回该Packet

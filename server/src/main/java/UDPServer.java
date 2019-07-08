@@ -1,5 +1,7 @@
 import core.IOContext;
 import impl.IOSelectorProvider;
+import impl.ScheduleImpl;
+import x.Xyz;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -21,6 +23,7 @@ public class UDPServer {
         File cachePath = Xyz.getCacheDir("server");
         IOContext.setup()
                 .ioProvider(new IOSelectorProvider())
+                .scheduler(new ScheduleImpl(1))
                 .start();
 
         // 根据端口构建TCP Server

@@ -8,8 +8,8 @@ import java.net.DatagramSocket;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
-import static Constant.Constant.HEADER;
-import static Enum.Enum.*;
+import static common.constant.Constant.HEADER;
+import static common.enums.Enum.*;
 
 /**
  * @param: none

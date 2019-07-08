@@ -1,13 +1,16 @@
 package handler;
 
 import Utils.CloseUtils;
+import box.StringReceivePacket;
 import core.Connector;
 import core.Packet;
 import core.ReceivePacket;
+import x.Xyz;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
+import java.util.concurrent.Executor;
 
 /**
  * @param: none
@@ -18,12 +21,14 @@ import java.nio.channels.SocketChannel;
 public class ClientHandler extends Connector {
     // 缓存文件目录
     private final File cachePath;
-    private final ClientHandlerCallBack clientHandlerCallBack;
+    private final Executor deliveryPool;
     private final String clientInfo;
+    private final ConnectCloseChain closeChain = new DefaultPrintConnectorCloseChain();
+    private final ConnectorStringPacketChain stringPacketChain = new DefaultNonConnectorStringPacketChain();
 
-    public ClientHandler(File cachePath, SocketChannel socketChannel, ClientHandlerCallBack clientHandlerCallBack) throws IOException {
+    public ClientHandler(File cachePath, SocketChannel socketChannel, Executor deliveryPool) throws IOException {
         this.cachePath = cachePath;
-        this.clientHandlerCallBack = clientHandlerCallBack;
+        this.deliveryPool = deliveryPool;
         this.clientInfo = "Address: " + socketChannel.getLocalAddress().toString();
 
         System.out.println("handler.ClientHandler => 新客户端连接：" + clientInfo);
@@ -38,18 +43,17 @@ public class ClientHandler extends Connector {
     @Override
     protected void receiveNewPacket(ReceivePacket packet) {
         super.receiveNewPacket(packet);
-        if (packet.type() == Packet.TYPE_MEMORY_STRING) {
-            String string = (String) packet.entity();
-            // 将收到的String进行转发
-            clientHandlerCallBack.onNewMessageArrived(this, string);
+        switch (packet.type()) {
+            case Packet.TYPE_MEMORY_STRING:
+                deliveryStringPacket((StringReceivePacket) packet);
+                break;
+            default:
+                System.out.println("New Packet: " + packet.type() + " - " + packet.length());
         }
     }
 
-    public interface ClientHandlerCallBack {
-        // 关闭自身线程
-        void selfClose(ClientHandler clientHandler);
-        // 收到消息时转发给所有其余客户端
-        void onNewMessageArrived(ClientHandler clientHandler, String msg);
+    private void deliveryStringPacket(StringReceivePacket packet) {
+        deliveryPool.execute(() -> stringPacketChain.handle(ClientHandler.this, packet));
     }
 
     @Override
@@ -60,16 +64,19 @@ public class ClientHandler extends Connector {
     @Override
     public void onChannelClosed(SocketChannel channel) {
         super.onChannelClosed(channel);
-        closeItself();
-    }
-
-    private void closeItself() {
-        exit();
-        clientHandlerCallBack.selfClose(this);
+        closeChain.handle(this, this);
     }
 
     public void exit() {
         CloseUtils.close(this);
-        System.out.println("handler.ClientHandler => 客户端已退出：" + clientInfo);
+        closeChain.handle(this, this);
+    }
+
+    public ConnectorStringPacketChain getStringPacketChain() {
+        return stringPacketChain;
+    }
+
+    public ConnectCloseChain getCloseChain() {
+        return closeChain;
     }
 }

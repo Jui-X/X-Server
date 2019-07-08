@@ -12,13 +12,19 @@ public class IOContext {
     private static IOContext INSTANCE;
     // 针对所有连接，都可以通过IOProvider进行注册与解除注册
     private final IOProvider IOProvider;
+    private final Scheduler scheduler;
 
-    public IOContext(IOProvider IOProvider) {
+    public IOContext(IOProvider IOProvider, Scheduler scheduler) {
         this.IOProvider = IOProvider;
+        this.scheduler = scheduler;
     }
 
     public IOProvider getProvider() {
         return this.IOProvider;
+    }
+
+    public Scheduler getScheduler() {
+        return this.scheduler;
     }
 
     public static IOContext getInstance() {
@@ -37,10 +43,12 @@ public class IOContext {
 
     private void closeItself() throws IOException {
         IOProvider.close();
+        scheduler.close();
     }
 
     public static class StartBoot {
         private IOProvider ioProvider;
+        private Scheduler scheduler;
 
         private StartBoot() {}
 
@@ -49,8 +57,13 @@ public class IOContext {
             return this;
         }
 
+        public StartBoot scheduler(Scheduler scheduler) {
+            this.scheduler = scheduler;
+            return this;
+        }
+
         public IOContext start() {
-            INSTANCE = new IOContext(ioProvider);
+            INSTANCE = new IOContext(ioProvider, scheduler);
             return INSTANCE;
         }
     }
