@@ -11,6 +11,10 @@ import java.io.IOException;
  * @create: 2019-06-28 16:50
  **/
 public abstract class Packet<Stream extends Closeable> implements Closeable {
+    /**
+     * 最大包大小，5个字节满载组成的Long类型
+     */
+    public static final long MAX_PACKET_SIZE = ((0XFFL) << 32) | ((0XFFL) << 24) | ((0XFFL << 16)) | ((0XFFL << 8)) | (0XFFL);
     // 数据类型
     // BYTES类型
     public static final byte TYPE_MEMORY_BYTES = 1;

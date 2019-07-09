@@ -99,7 +99,7 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher, IOParameter.IO
 
     @Override
     public ReceivePacket takePacket(byte type, long length, byte[] headerInfo) {
-        return callback.onNewPacketArrived(type, length);
+        return callback.onNewPacketArrived(type, length, headerInfo);
     }
 
     @Override

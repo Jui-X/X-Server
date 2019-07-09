@@ -13,7 +13,7 @@ public interface ReceiveDispatcher extends Closeable {
     void stop();
 
     interface ReceivePacketCallback{
-        ReceivePacket<?,?> onNewPacketArrived(byte type, long length);
+        ReceivePacket<?,?> onNewPacketArrived(byte type, long length, byte[] headInfo);
 
         void onReceivePacketCompleted(ReceivePacket packet);
 

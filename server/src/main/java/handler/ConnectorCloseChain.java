@@ -12,6 +12,6 @@ import core.Connector;
 /**
  * 关闭链接链式结构
  */
-public abstract class ConnectCloseChain extends ConnectorHandlerChain<Connector>{
+public abstract class ConnectorCloseChain extends ConnectorHandlerChain<Connector>{
 
 }

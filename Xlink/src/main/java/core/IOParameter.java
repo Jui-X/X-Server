@@ -14,8 +14,25 @@ import java.nio.channels.WritableByteChannel;
  * @create: 2019-06-02 13:33
  **/
 public class IOParameter {
+    // 单次操作最大区间
     private int limit = 256;
+    // 是否需要消费所有区间（读取、写入）
+    private final boolean isNeedConsumingRemaining;
     private ByteBuffer buffer = ByteBuffer.allocate(256);
+
+    public IOParameter() {
+        this(256);
+    }
+
+    public IOParameter(int size) {
+        this(size, true);
+    }
+
+    public IOParameter(int size, boolean isNeedConsumingRemaining) {
+        this.limit = size;
+        this.isNeedConsumingRemaining = isNeedConsumingRemaining;
+        this.buffer = ByteBuffer.allocate(size);
+    }
 
     /**
      * 从bytes数组中读取数据进行消费
@@ -150,8 +167,22 @@ public class IOParameter {
         return buffer.capacity();
     }
 
+    /**
+     * 是否还有数据需要消费，或者说是否还有空闲区间需要容纳内容
+     *
+     * @return 还有数据存储或未消费区间
+     */
     public boolean remained() {
         return buffer.remaining() > 0;
+    }
+
+    /**
+     * 是否需要填满 或 完全消费所有数据
+     *
+     * @return 是否
+     */
+    public boolean isNeedConsumingRemaining() {
+        return isNeedConsumingRemaining;
     }
 
     /**
@@ -159,7 +190,7 @@ public class IOParameter {
      * @param size 想要填充数据的长度
      * @return 真实填充数据的长度
      */
-    public int fillWithEmpty(int size) {
+    public int fillEmpty(int size) {
         int fillSize = Math.min(size, buffer.remaining());
         buffer.position(buffer.position() + fillSize);
         return fillSize;
@@ -175,6 +206,13 @@ public class IOParameter {
         int emptySize = Math.min(size, buffer.remaining());
         buffer.position(buffer.position() + emptySize);
         return emptySize;
+    }
+
+    /**
+     * 重置最大限制
+     */
+    public void resetLimit() {
+        this.limit = buffer.capacity();
     }
 
     /**

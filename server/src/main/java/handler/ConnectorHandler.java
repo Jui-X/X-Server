@@ -7,8 +7,10 @@ import core.Packet;
 import core.ReceivePacket;
 import x.Xyz;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.Executor;
 
@@ -18,20 +20,20 @@ import java.util.concurrent.Executor;
  * @author: KingJ
  * @create: 2019-05-27 20:14
  **/
-public class ClientHandler extends Connector {
+public class ConnectorHandler extends Connector {
     // 缓存文件目录
     private final File cachePath;
     private final Executor deliveryPool;
     private final String clientInfo;
-    private final ConnectCloseChain closeChain = new DefaultPrintConnectorCloseChain();
+    private final ConnectorCloseChain closeChain = new DefaultPrintConnectorCloseChain();
     private final ConnectorStringPacketChain stringPacketChain = new DefaultNonConnectorStringPacketChain();
 
-    public ClientHandler(File cachePath, SocketChannel socketChannel, Executor deliveryPool) throws IOException {
+    public ConnectorHandler(File cachePath, SocketChannel socketChannel, Executor deliveryPool) throws IOException {
         this.cachePath = cachePath;
         this.deliveryPool = deliveryPool;
         this.clientInfo = "Address: " + socketChannel.getLocalAddress().toString();
 
-        System.out.println("handler.ClientHandler => 新客户端连接：" + clientInfo);
+        System.out.println("handler.ConnectorHandler => 新客户端连接：" + clientInfo);
 
         setUp(socketChannel);
     }
@@ -53,12 +55,18 @@ public class ClientHandler extends Connector {
     }
 
     private void deliveryStringPacket(StringReceivePacket packet) {
-        deliveryPool.execute(() -> stringPacketChain.handle(ClientHandler.this, packet));
+        deliveryPool.execute(() -> stringPacketChain.handle(ConnectorHandler.this, packet));
     }
 
     @Override
-    protected File createNewReceiveFile() {
+    protected File createNewReceiveFile(long length, byte[] headInfo) {
         return Xyz.createTempFile(cachePath);
+    }
+
+    @Override
+    protected OutputStream createNewReceiveDirectOutputStream(long length, byte[] headInfo) {
+        // 服务器默认创建一个内存存储ByteArrayOutputStream
+        return new ByteArrayOutputStream();
     }
 
     @Override
@@ -76,7 +84,7 @@ public class ClientHandler extends Connector {
         return stringPacketChain;
     }
 
-    public ConnectCloseChain getCloseChain() {
+    public ConnectorCloseChain getCloseChain() {
         return closeChain;
     }
 }

@@ -85,8 +85,10 @@ public class SocketChannelAdapter implements Sender, Receiver, Closeable {
 
             lastReadTime = System.currentTimeMillis();
 
-            // 此处receiveEventListener来自外层Connector的监听事件echoReceiveListener
             IOParameter.IOParaEventProcessor processor = receiveIOEventProcessor;
+            if (processor == null) {
+                return;
+            }
 
             if (parameter == null) {
                 parameter = processor.provideParameter();
@@ -102,7 +104,8 @@ public class SocketChannelAdapter implements Sender, Receiver, Closeable {
                         System.out.println("Current read no data!");
                     }
 
-                    if (parameter.remained()) {
+                    // 检查是否还有空闲区间，以及是否需要填满空闲区间
+                    if (parameter.remained() && parameter.isNeedConsumingRemaining()) {
                         // 附加未消费完的parameter
                         attach = parameter;
                         // 再次注册数据发送事件
@@ -151,8 +154,10 @@ public class SocketChannelAdapter implements Sender, Receiver, Closeable {
 
             lastWriteTime = System.currentTimeMillis();
 
-            // 此处receiveEventListener来自外层Connector的监听事件echoReceiveListener
             IOParameter.IOParaEventProcessor processor = sendIOEventProcessor;
+            if (processor == null) {
+                return;
+            }
 
             // 从回调中得到发送数据的parameter
             if (parameter == null) {
@@ -168,7 +173,8 @@ public class SocketChannelAdapter implements Sender, Receiver, Closeable {
                         System.out.println("Current write no data!");
                     }
 
-                    if (parameter.remained()) {
+                    // 检查是否还有空闲区间，以及是否需要填满空闲区间
+                    if (parameter.remained() && parameter.isNeedConsumingRemaining()) {
                         // 附加未消费完的parameter
                         attach = parameter;
                         // 再次注册数据发送事件

@@ -1,6 +1,5 @@
 import box.StringReceivePacket;
-import handler.ClientHandler;
-import handler.ConnectorHandlerChain;
+import handler.ConnectorHandler;
 import handler.ConnectorStringPacketChain;
 
 /**
@@ -20,7 +19,7 @@ public class ServerStatistics {
     class StatisticsConnectorStringPacketChain extends ConnectorStringPacketChain {
 
         @Override
-        protected boolean consume(ClientHandler handler, StringReceivePacket stringReceivePacket) {
+        protected boolean consume(ConnectorHandler handler, StringReceivePacket stringReceivePacket) {
             // 接受数据自增
             receiveSize++;
             return false;

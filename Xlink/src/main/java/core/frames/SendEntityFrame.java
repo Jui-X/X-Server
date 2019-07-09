@@ -27,7 +27,7 @@ public class SendEntityFrame extends AbsSendPacketFrame {
     protected int consumeBody(IOParameter parameter) throws IOException {
         if (packet == null) {
             // 已终止发送当前帧，填充假数据
-            return parameter.fillWithEmpty(bodyRemaining);
+            return parameter.fillEmpty(bodyRemaining);
         }
         return parameter.readFrom(channel);
     }

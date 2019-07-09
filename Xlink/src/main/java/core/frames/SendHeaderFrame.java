@@ -2,6 +2,7 @@ package core.frames;
 
 import core.Frame;
 import core.IOParameter;
+import core.Packet;
 import core.SendPacket;
 
 import java.io.IOException;
@@ -50,9 +51,15 @@ public class SendHeaderFrame extends AbsSendPacketFrame {
 
     @Override
     public Frame buildNextFrame() {
-        InputStream inputStream = packet.open();
-        ReadableByteChannel channel = Channels.newChannel(inputStream);
-
-        return new SendEntityFrame(getFrameBodyLength(), getFrameIdentifier(), channel, packet);
+        byte type = packet.type();
+        if (type == Packet.TYPE_STREAM_DIRECT) {
+            // 直流类型
+            return SendDirectEntityFrame.buildEntityFrame(packet, getFrameIdentifier());
+        } else {
+            // 普通数据类型
+            InputStream stream = packet.open();
+            ReadableByteChannel channel = Channels.newChannel(stream);
+            return new SendEntityFrame(packet.length(), getFrameIdentifier(), channel, packet);
+        }
     }
 }

@@ -1,17 +1,17 @@
 package core;
 
 import Utils.CloseUtils;
-import box.BytesReceivePacket;
-import box.FileReceivePacket;
-import box.StringReceivePacket;
-import box.StringSendPacket;
+import box.*;
 import impl.SocketChannelAdapter;
 import impl.async.AsyncReceiveDispatcher;
 import impl.async.AsyncSendDispatcher;
+import impl.bridge.BridgeSocketDispatcher;
+import javafx.scene.transform.Shear;
 
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.List;
@@ -58,6 +58,61 @@ public abstract class Connector implements Closeable, SocketChannelAdapter.OnCha
         sendDispatcher.send(packet);
     }
 
+    /**
+     * 改变当前调度器为桥接模式
+     */
+    public void changeToBridge() {
+        if (receiveDispatcher instanceof BridgeSocketDispatcher) {
+            // 已经转换过的话直接返回
+            return;
+        }
+
+        // 没有则将旧的receiveDispatcher停止
+        receiveDispatcher.stop();
+
+        // 构建新的接收者调度器
+        BridgeSocketDispatcher dispatcher = new BridgeSocketDispatcher(receiver);
+        receiveDispatcher = dispatcher;
+        dispatcher.start();
+    }
+
+    /**
+     * 将另外一个链接的发送者绑定到当前链接的桥接调度器上实现两个链接的桥接功能
+     *
+     * @param sender 另外一个链接的发送者
+     */
+    public void bingToBridge(Sender sender) {
+        if (sender == this.sender) {
+            throw new UnsupportedOperationException("Cannot set current connector sender to self bridge mode!");
+        }
+
+        if (!(receiveDispatcher instanceof BridgeSocketDispatcher)) {
+            throw new IllegalArgumentException("receiveDispatcher is not BridgeSocketDispatcher!");
+        }
+
+        ((BridgeSocketDispatcher) receiveDispatcher).bindSender(sender);
+    }
+
+    /**
+     * 将之前链接的发送者解除绑定，解除桥接数据发送功能
+     */
+    public void unBindToBridge() {
+        if (!(receiveDispatcher instanceof BridgeSocketDispatcher)) {
+            throw new IllegalArgumentException("receiveDispatcher is not BridgeSocketDispatcher!");
+        }
+
+        ((BridgeSocketDispatcher) receiveDispatcher).bindSender(null);
+    }
+
+    /**
+     * 获取当前链接的发送者
+     *
+     * @return 发送者
+     */
+    public Sender getSender() {
+        return sender;
+    }
+
     public void schedule(ScheduleJob job) {
         synchronized (scheduleJobs) {
             if (scheduleJobs.contains(job)) {
@@ -84,19 +139,20 @@ public abstract class Connector implements Closeable, SocketChannelAdapter.OnCha
 
     /**
      * 接收事件回调
+     * 当收到一个新的包Packet时会进行回调的内部类
      */
     private ReceiveDispatcher.ReceivePacketCallback receivePacketCallback = new ReceiveDispatcher.ReceivePacketCallback() {
         @Override
-        public ReceivePacket<?, ?> onNewPacketArrived(byte type, long length) {
+        public ReceivePacket<?, ?> onNewPacketArrived(byte type, long length, byte[] headInfo) {
             switch (type) {
                 case Packet.TYPE_MEMORY_BYTES:
                     return new BytesReceivePacket(length);
                 case Packet.TYPE_MEMORY_STRING:
                     return new StringReceivePacket(length);
                 case Packet.TYPE_STREAM_FILE:
-                    return new FileReceivePacket(length, createNewReceiveFile());
+                    return new FileReceivePacket(length, createNewReceiveFile(length, headInfo));
                 case Packet.TYPE_STREAM_DIRECT:
-                    return new BytesReceivePacket(length);
+                    return new StreamDirectReceivePacket(length, createNewReceiveDirectOutputStream(length, headInfo));
                 default:
                     throw new UnsupportedOperationException("Unsupport Packet Type...");
             }
@@ -113,7 +169,9 @@ public abstract class Connector implements Closeable, SocketChannelAdapter.OnCha
         }
     };
 
-    protected abstract File createNewReceiveFile();
+    protected abstract File createNewReceiveFile(long len, byte[] headInfo);
+
+    protected abstract OutputStream createNewReceiveDirectOutputStream(long length, byte[] headInfo);
 
     protected void receiveNewPacket(ReceivePacket packet) {
         // System.out.println("Connector => " + key.toString() + ": [New Packet]-Type: "+ packet.type() + ", Length: " + packet.length);
@@ -148,4 +206,5 @@ public abstract class Connector implements Closeable, SocketChannelAdapter.OnCha
     public UUID getKey() {
         return key;
     }
+
 }
