@@ -5,9 +5,11 @@ import core.IOParameter;
 import core.IOProvider;
 import core.Receiver;
 import core.Sender;
+import impl.exceptions.EmptyIOParameterException;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -24,43 +26,33 @@ public class SocketChannelAdapter implements Sender, Receiver, Closeable {
     private final SocketChannel channel;
     private final IOProvider IOProvider;
     private final OnChannelStatusChangedListener listener;
-
-    // 接收的回调
-    private IOParameter.IOParaEventProcessor receiveIOEventProcessor;
-    // 发送的回调
-    private IOParameter.IOParaEventProcessor sendIOEventProcessor;
-
-    private volatile long lastReadTime = System.currentTimeMillis();
-    private volatile long lastWriteTime = System.currentTimeMillis();
+    private final AbsProvideCallback inputCallback;
+    private final AbsProvideCallback outputCallback;
 
     public SocketChannelAdapter(SocketChannel channel, core.IOProvider ioProvider,
                                 OnChannelStatusChangedListener listener) throws IOException {
         this.channel = channel;
-        channel.configureBlocking(false);
 
-        IOProvider = ioProvider;
+        this.IOProvider = ioProvider;
         this.listener = listener;
-    }
 
-    @Override
-    public void close() throws IOException {
-        if (isClosed.compareAndSet(false, true)) {
-            IOProvider.unregisterInput(channel);
-            IOProvider.unregisterOutput(channel);
-
-            CloseUtils.close(channel);
-            listener.onChannelClosed(channel);
-        }
+        this.inputCallback = new InputProviderCallback(IOProvider, channel, SelectionKey.OP_READ);
+        this.outputCallback = new OutputProviderCallback(IOProvider, channel, SelectionKey.OP_WRITE);
     }
 
     @Override
     public void setReceiveListener(IOParameter.IOParaEventProcessor processor) {
-        receiveIOEventProcessor = processor;
+        inputCallback.eventProcessor = processor;
     }
 
     @Override
-    public boolean postReceiveAsync() throws IOException {
-        if (isClosed.get()) {
+    public long getLastReadTime() {
+        return inputCallback.lastActiveTime;
+    }
+
+    @Override
+    public void postReceiveAsync() throws Exception {
+        if (isClosed.get() || !channel.isOpen()) {
             throw new IOException("Current Thread has been closed.");
         }
 
@@ -68,67 +60,21 @@ public class SocketChannelAdapter implements Sender, Receiver, Closeable {
         inputCallback.checkAttachNull();
 
         // 将channel注册到Selector的对应事件（此处为读事件）上
-        return IOProvider.registerInput(channel, inputCallback);
+        IOProvider.register(inputCallback);
     }
 
     @Override
-    public long getLastReadTime() {
-        return lastReadTime;
-    }
-
-    private final IOProvider.HandleProvideCallback inputCallback = new IOProvider.HandleProvideCallback() {
-        @Override
-        protected void provideParameter(IOParameter parameter) {
-            if (isClosed.get()) {
-                return;
-            }
-
-            lastReadTime = System.currentTimeMillis();
-
-            IOParameter.IOParaEventProcessor processor = receiveIOEventProcessor;
-            if (processor == null) {
-                return;
-            }
-
-            if (parameter == null) {
-                parameter = processor.provideParameter();
-            }
-
-            try {
-                // 具体的读取操作
-                if (parameter == null) {
-                    processor.onConsumeFailed(null, new IOException("Provide IOParameter is null..."));
-                }  else {
-                    int count = parameter.readFrom(channel);
-                    if (count == 0) {
-                        System.out.println("Current read no data!");
-                    }
-
-                    // 检查是否还有空闲区间，以及是否需要填满空闲区间
-                    if (parameter.remained() && parameter.isNeedConsumingRemaining()) {
-                        // 附加未消费完的parameter
-                        attach = parameter;
-                        // 再次注册数据发送事件
-                        IOProvider.registerInput(channel, this);
-                    } else {
-                        parameter = null;
-                        // 读取完成回调
-                        processor.onConsumeCompleted(parameter);
-                    }
-                }
-            } catch (IOException e) {
-                CloseUtils.close(SocketChannelAdapter.this);
-            }
-        }
-    };
-
-    @Override
-    public void setSendProcessor (IOParameter.IOParaEventProcessor processor) {
-        sendIOEventProcessor = processor;
+    public void setSendProcessor(IOParameter.IOParaEventProcessor processor) {
+        outputCallback.eventProcessor = processor;
     }
 
     @Override
-    public boolean postSendAsync() throws IOException {
+    public long getLastWriteTime() {
+        return outputCallback.lastActiveTime;
+    }
+
+    @Override
+    public void postSendAsync() throws Exception {
         if (isClosed.get()) {
             throw new IOException("Current Thread has been closed.");
         }
@@ -137,59 +83,111 @@ public class SocketChannelAdapter implements Sender, Receiver, Closeable {
         outputCallback.checkAttachNull();
 
         // 当前发送的数据添加到回调中
-        return IOProvider.registerOutput(channel, outputCallback);
+        IOProvider.register(outputCallback);
     }
 
     @Override
-    public long getLastWriteTime() {
-        return lastWriteTime;
+    public void close() {
+        if (isClosed.compareAndSet(false, true)) {
+            // 接触注册回调
+            IOProvider.unRegister(channel);
+            // 关闭
+            CloseUtils.close(channel);
+            // 回调返回当前Channel已关闭的信息
+            listener.onChannelClosed(channel);
+        }
     }
 
-    private final IOProvider.HandleProvideCallback outputCallback = new IOProvider.HandleProvideCallback() {
+    abstract class AbsProvideCallback extends core.IOProvider.HandleProvideCallback {
+        volatile IOParameter.IOParaEventProcessor eventProcessor;
+        volatile long lastActiveTime = System.currentTimeMillis();
+
+        AbsProvideCallback(core.IOProvider provider, SocketChannel channel, int ops) {
+            super(provider, channel, ops);
+        }
+
         @Override
-        protected void provideParameter(IOParameter parameter) {
+        protected boolean provideParameter(IOParameter parameter) {
             if (isClosed.get()) {
-                return;
+                return false;
             }
 
-            lastWriteTime = System.currentTimeMillis();
-
-            IOParameter.IOParaEventProcessor processor = sendIOEventProcessor;
+            final IOParameter.IOParaEventProcessor processor = eventProcessor;
             if (processor == null) {
-                return;
+                return false;
             }
 
-            // 从回调中得到发送数据的parameter
+            // 刷新输出时间
+            lastActiveTime = System.currentTimeMillis();
+
             if (parameter == null) {
+                // parameter为空则拿一份新的parameter
                 parameter = processor.provideParameter();
             }
 
             try {
+                // 具体的读取操作
                 if (parameter == null) {
-                    processor.onConsumeFailed(null, new IOException("ProvideParameter is null"));
-                } else {
-                    int count = parameter.writeTo(channel);
-                    if (count == 0) {
-                        System.out.println("Current write no data!");
-                    }
-
-                    // 检查是否还有空闲区间，以及是否需要填满空闲区间
-                    if (parameter.remained() && parameter.isNeedConsumingRemaining()) {
-                        // 附加未消费完的parameter
-                        attach = parameter;
-                        // 再次注册数据发送事件
-                        IOProvider.registerOutput(channel, this);
-                    } else {
-                        parameter = null;
-                        // 写入完成回调
-                        processor.onConsumeCompleted(parameter);
-                    }
+                    throw new EmptyIOParameterException("Provide IOParameter is null...");
                 }
+                int count = consumeIOParameter(parameter, channel);
+
+                // 检查是否还有空闲区间，以及是否需要填满空闲区间
+                // 1.本次数据未消费
+                // 2.需要消费所有数据
+                if (parameter.remained() && (count == 0 || parameter.isNeedConsumingRemaining())) {
+                    // 附加未消费完的parameter
+                    attach = parameter;
+                    // 再次注册数据发送事件
+                    return true;
+                } else {
+                    parameter = null;
+                    // 读取完成回调
+                    return processor.onConsumeCompleted(parameter);
+                }
+
             } catch (IOException e) {
+                if (processor.onConsumeFailed(e)) {
+                    CloseUtils.close(SocketChannelAdapter.this);
+                }
+                return false;
+            }
+        }
+
+        @Override
+        public void fireThrowable(Throwable e) {
+            final IOParameter.IOParaEventProcessor processor = eventProcessor;
+            if (processor == null || processor.onConsumeFailed(e)) {
                 CloseUtils.close(SocketChannelAdapter.this);
             }
         }
-    };
+
+        protected abstract int consumeIOParameter(IOParameter parameter, SocketChannel channel) throws IOException;
+    }
+
+    class InputProviderCallback extends AbsProvideCallback {
+
+        InputProviderCallback(core.IOProvider provider, SocketChannel channel, int ops) {
+            super(provider, channel, ops);
+        }
+
+        @Override
+        protected int consumeIOParameter(IOParameter parameter, SocketChannel channel) throws IOException {
+            return parameter.readFrom(channel);
+        }
+    }
+
+    class OutputProviderCallback extends AbsProvideCallback {
+
+        OutputProviderCallback(core.IOProvider provider, SocketChannel channel, int ops) {
+            super(provider, channel, ops);
+        }
+
+        @Override
+        protected int consumeIOParameter(IOParameter parameter, SocketChannel channel) throws IOException {
+            return parameter.writeTo(channel);
+        }
+    }
 
     public interface OnChannelStatusChangedListener {
         void onChannelClosed(SocketChannel channel);

@@ -44,24 +44,21 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher, IOParameter.IO
             // 在接受完成的进行回调
             // 执行onComplete方法 打印（receiveNewMessage） 并 继续接收数据（readNextMsg）
             receiver.postReceiveAsync();
-        } catch (IOException e) {
-            closeAndNotify();
+        } catch (Exception e) {
+            CloseUtils.close(this);
         }
-    }
-
-    private void closeAndNotify() {
-        CloseUtils.close(this);
     }
 
     @Override
     public void stop() {
-
+        receiver.setReceiveListener(null);
     }
 
     @Override
     public void close() throws IOException {
         if (isClosed.compareAndSet(false, true)) {
             writer.close();
+            receiver.setReceiveListener(null);
         }
     }
 
@@ -74,15 +71,15 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher, IOParameter.IO
     }
 
     @Override
-    public void onConsumeFailed(IOParameter parameter, Exception e) {
-        e.printStackTrace();
+    public boolean onConsumeFailed(Throwable e) {
+        CloseUtils.close(this);
+        return true;
     }
 
     @Override
-    public void onConsumeCompleted(IOParameter parameter) {
-        if (isClosed.get()) {
-            return;
-        }
+    public boolean onConsumeCompleted(IOParameter parameter) {
+        final AtomicBoolean isClosed = this.isClosed;
+        final AsyncPacketWriter writer = this.writer;
 
         // 消费数据之前表示parameter数据填充完成
         // 改变未消费数据状态
@@ -93,8 +90,7 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher, IOParameter.IO
             writer.consumeIOParameter(parameter);
         } while (parameter.remained() && !isClosed.get());
 
-        // 接收下一条数据
-        registerReceive();
+        return !isClosed.get();
     }
 
     @Override

@@ -12,6 +12,7 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.StandardSocketOptions;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +35,13 @@ public abstract class Connector implements Closeable, SocketChannelAdapter.OnCha
 
     public void setUp(SocketChannel channel) throws IOException {
         this.channel = channel;
+        channel.configureBlocking(false);
+        channel.socket().setSoTimeout(1000);
+        channel.socket().setPerformancePreferences(1, 3, 3);
+        channel.setOption(StandardSocketOptions.SO_RCVBUF, 16 * 1024);
+        channel.setOption(StandardSocketOptions.SO_SNDBUF, 16 * 1024);
+        channel.setOption(StandardSocketOptions.SO_KEEPALIVE, true);
+        channel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
 
         IOContext ioContext = IOContext.getInstance();
         SocketChannelAdapter adapter = new SocketChannelAdapter(channel, ioContext.getProvider(),

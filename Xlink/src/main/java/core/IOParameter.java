@@ -227,15 +227,16 @@ public class IOParameter {
 
         /**
          * 消费失败时回调
-         * @param parameter parameter
          * @param e         异常信息
+         * @return          是否关闭链接，True关闭
          */
-        void onConsumeFailed(IOParameter parameter, Exception e);
+        boolean onConsumeFailed(Throwable e);
 
         /**
          * 消费完成时的回调
          * @param parameter parameter
+         * @return          True：直接注册下一份调度，False：无需注册
          */
-        void onConsumeCompleted(IOParameter parameter);
+        boolean onConsumeCompleted(IOParameter parameter);
     }
 }

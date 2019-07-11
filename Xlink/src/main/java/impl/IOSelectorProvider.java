@@ -2,6 +2,7 @@ package impl;
 
 import core.IOProvider;
 import Utils.CloseUtils;
+import jdk.nashorn.internal.ir.annotations.Ignore;
 
 import java.io.IOException;
 import java.nio.channels.*;
@@ -51,7 +52,7 @@ public class IOSelectorProvider implements IOProvider {
         startWrite();
     }
 
-    static class SelectThread extends Thread {
+    static class SelectorThread extends Thread {
         private final AtomicBoolean isClosed;
         private final AtomicBoolean locker;
         private final Selector selector;
@@ -59,7 +60,7 @@ public class IOSelectorProvider implements IOProvider {
         private final ExecutorService pool;
         private final int keyOps;
 
-        SelectThread(String name, AtomicBoolean isClosed, AtomicBoolean locker, Selector selector, HashMap<SelectionKey, Runnable> map, ExecutorService pool, int keyOps) {
+        SelectorThread(String name, AtomicBoolean isClosed, AtomicBoolean locker, Selector selector, HashMap<SelectionKey, Runnable> map, ExecutorService pool, int keyOps) {
             super(name);
             this.isClosed = isClosed;
             this.locker = locker;
@@ -112,14 +113,14 @@ public class IOSelectorProvider implements IOProvider {
     }
 
     private void startRead() {
-        Thread thread = new SelectThread("Xlink IOSelectorProvider ReadSelector Thread",
+        Thread thread = new SelectorThread("Xlink IOSelectorProvider ReadSelector Thread",
                 isClosed, inRegisterInput, readSelector, inputCallbackMap, inputHandlerPool,
                 SelectionKey.OP_READ);
         thread.start();
     }
 
     private void startWrite() {
-        Thread thread = new SelectThread("Xlink IOSelectorProvider WriteSelector Thread",
+        Thread thread = new SelectorThread("Xlink IOSelectorProvider WriteSelector Thread",
                 isClosed, inRegisterOutput, writeSelector, outputCallbackMap, outputHandlerPool,
                 SelectionKey.OP_WRITE);
         thread.start();
@@ -131,7 +132,7 @@ public class IOSelectorProvider implements IOProvider {
         synchronized (locker) {
             try {
                 // 取消对keyOps的监听
-                key.interestOps(key.readyOps() & ~opRead);
+                key.interestOps(key.interestOps() & ~opRead);
             } catch (CancelledKeyException e) {
                 // 当发现key已经被关闭时，直接返回无需进行后续操作
                 return;
@@ -142,8 +143,8 @@ public class IOSelectorProvider implements IOProvider {
         try {
             // 取出Selection Key对应的Runnable任务
             runnable = map.get(key);
-        } catch (Exception ignored) {}
-
+        } catch (Exception ignored) {
+        }
         if (runnable != null && !pool.isShutdown()) {
             // 异步调度
             pool.execute(runnable);
@@ -164,21 +165,22 @@ public class IOSelectorProvider implements IOProvider {
     }
 
     @Override
-    public boolean registerInput(SocketChannel channel, HandleProvideCallback callback) throws IOException {
-
-        return registerSelectionKey(channel, readSelector, SelectionKey.OP_READ, inRegisterInput,
-                inputCallbackMap, inputHandlerPool, callback) != null;
-    }
-
-    @Override
-    public boolean registerOutput(SocketChannel channel, HandleProvideCallback callback) {
-
-        return registerSelectionKey(channel, writeSelector, SelectionKey.OP_WRITE, inRegisterOutput,
-                outputCallbackMap, outputHandlerPool, callback) != null;
+    public void register(HandleProvideCallback callback) throws Exception {
+        SelectionKey key;
+        if (callback.ops == SelectionKey.OP_READ) {
+            key = registerSelectionKey(callback.channel, readSelector, SelectionKey.OP_READ, inRegisterInput,
+                    inputCallbackMap, callback);
+        } else {
+            key = registerSelectionKey(callback.channel, writeSelector, SelectionKey.OP_WRITE, inRegisterOutput,
+                    outputCallbackMap, callback);
+        }
+        if (key == null) {
+            throw new IOException("Register Error: Channel: " + callback.channel + " ops: " + callback.ops);
+        }
     }
 
     private static SelectionKey registerSelectionKey(SocketChannel channel, Selector selector, int registerOps, AtomicBoolean locker,
-                          HashMap<SelectionKey, Runnable> map, ExecutorService pool, Runnable runnable) {
+                          HashMap<SelectionKey, Runnable> map, Runnable runnable) {
 
         synchronized (locker) {
             // 设置锁定状态
@@ -224,12 +226,8 @@ public class IOSelectorProvider implements IOProvider {
     }
 
     @Override
-    public void unregisterInput(SocketChannel channel) {
+    public void unRegister(SocketChannel channel) {
         unregisterSelection(channel, readSelector, inputCallbackMap, inRegisterInput);
-    }
-
-    @Override
-    public void unregisterOutput(SocketChannel channel) {
         unregisterSelection(channel, writeSelector, outputCallbackMap, inRegisterOutput);
     }
 

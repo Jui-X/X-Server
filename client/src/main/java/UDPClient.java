@@ -1,6 +1,7 @@
 import box.FileSendPacket;
 import core.IOContext;
 import impl.IOSelectorProvider;
+import impl.IOStealingSelectorProvider;
 import x.Xyz;
 
 import java.io.*;
@@ -18,7 +19,7 @@ public class UDPClient {
         File cachePath = Xyz.getCacheDir("client");
 
         IOContext.setup()
-                .ioProvider(new IOSelectorProvider())
+                .ioProvider(new IOStealingSelectorProvider(1))
                 .start();
 
         // 超时时间设置为10s

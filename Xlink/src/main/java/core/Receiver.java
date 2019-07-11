@@ -7,7 +7,7 @@ public interface Receiver extends Closeable {
 
     void setReceiveListener(IOParameter.IOParaEventProcessor processor);
 
-    boolean postReceiveAsync() throws IOException;
+    void postReceiveAsync() throws Exception;
 
     long getLastReadTime();
 }

@@ -1,5 +1,6 @@
 import core.IOContext;
 import impl.IOSelectorProvider;
+import impl.IOStealingSelectorProvider;
 import impl.ScheduleImpl;
 import x.Xyz;
 
@@ -22,7 +23,7 @@ public class UDPServer {
         // 缓存文件目录
         File cachePath = Xyz.getCacheDir("server");
         IOContext.setup()
-                .ioProvider(new IOSelectorProvider())
+                .ioProvider(new IOStealingSelectorProvider(1))
                 .scheduler(new ScheduleImpl(1))
                 .start();
 

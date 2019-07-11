@@ -1,11 +1,15 @@
 import Utils.CloseUtils;
+import box.StringReceivePacket;
 import core.Connector;
 import core.Packet;
 import core.ReceivePacket;
+import handler.ConnectorHandler;
+import handler.ConnectorStringPacketChain;
 import x.Xyz;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.Inet4Address;
 import java.net.InetSocketAddress;
 import java.nio.channels.SocketChannel;
@@ -16,15 +20,29 @@ import java.nio.channels.SocketChannel;
  * @author: KingJ
  * @create: 2019-05-27 16:39
  **/
-public class TCPClient extends Connector {
-    private final File cachePath;
+public class TCPClient extends ConnectorHandler {
 
-    public TCPClient(SocketChannel socketChannel, File path) throws IOException {
-        cachePath = path;
-        setUp(socketChannel);
+    public TCPClient(SocketChannel socketChannel, File path, boolean printReceiveString) throws IOException {
+        super(path, socketChannel);
+        if (printReceiveString) {
+            getStringPacketChain().appendLast(new PrintStringPacketChain());
+        }
+    }
+
+    private class PrintStringPacketChain extends ConnectorStringPacketChain {
+        @Override
+        protected boolean consume(ConnectorHandler handler, StringReceivePacket stringReceivePacket) {
+            String str = stringReceivePacket.entity();
+            System.out.println(str);
+            return true;
+        }
     }
 
     public static TCPClient startWith(ServerInfo info, File cachePath) throws IOException {
+        return startWith(info, cachePath, true);
+    }
+
+    public static TCPClient startWith(ServerInfo info, File cachePath, boolean printReceiveString) throws IOException {
         SocketChannel client = SocketChannel.open();
 
         // 连接到TCPServer指定的端口
@@ -34,7 +52,7 @@ public class TCPClient extends Connector {
         System.out.println("TCPClient => 服务器端信息：" + client.getRemoteAddress().toString());
 
         try {
-            return new TCPClient(client, cachePath);
+            return new TCPClient(client, cachePath, printReceiveString);
         } catch (Exception e) {
             System.out.println("TCPClient => 连接异常关闭");
             CloseUtils.close(client);
@@ -44,11 +62,6 @@ public class TCPClient extends Connector {
         System.out.println("TCPClient => TCP Client exit...");
 
         return null;
-    }
-
-    @Override
-    protected File createNewReceiveFile() {
-        return Xyz.createTempFile(cachePath);
     }
 
     @Override

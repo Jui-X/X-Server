@@ -3,6 +3,7 @@ package handler;
 import Utils.CloseUtils;
 import box.StringReceivePacket;
 import core.Connector;
+import core.IOContext;
 import core.Packet;
 import core.ReceivePacket;
 import x.Xyz;
@@ -12,7 +13,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.channels.SocketChannel;
-import java.util.concurrent.Executor;
 
 /**
  * @param: none
@@ -23,14 +23,12 @@ import java.util.concurrent.Executor;
 public class ConnectorHandler extends Connector {
     // 缓存文件目录
     private final File cachePath;
-    private final Executor deliveryPool;
     private final String clientInfo;
     private final ConnectorCloseChain closeChain = new DefaultPrintConnectorCloseChain();
     private final ConnectorStringPacketChain stringPacketChain = new DefaultNonConnectorStringPacketChain();
 
-    public ConnectorHandler(File cachePath, SocketChannel socketChannel, Executor deliveryPool) throws IOException {
+    public ConnectorHandler(File cachePath, SocketChannel socketChannel) throws IOException {
         this.cachePath = cachePath;
-        this.deliveryPool = deliveryPool;
         this.clientInfo = "Address: " + socketChannel.getLocalAddress().toString();
 
         System.out.println("handler.ConnectorHandler => 新客户端连接：" + clientInfo);
@@ -55,7 +53,7 @@ public class ConnectorHandler extends Connector {
     }
 
     private void deliveryStringPacket(StringReceivePacket packet) {
-        deliveryPool.execute(() -> stringPacketChain.handle(ConnectorHandler.this, packet));
+        IOContext.getInstance().getScheduler().delivery(() -> stringPacketChain.handle(ConnectorHandler.this, packet));
     }
 
     @Override

@@ -3,10 +3,7 @@ package impl;
 import core.Scheduler;
 
 import java.io.IOException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * @param: none
@@ -16,10 +13,13 @@ import java.util.concurrent.TimeUnit;
  **/
 public class ScheduleImpl implements Scheduler {
     private final ScheduledExecutorService scheduledExecutorService;
+    private final ExecutorService deliveryPool;
 
     public ScheduleImpl(int poolSize) {
         this.scheduledExecutorService = Executors.newScheduledThreadPool(poolSize,
                 new IOSelectorProvider.IOProviderThreadFactory("Schedule-Thread-"));
+        this.deliveryPool = Executors.newFixedThreadPool(4,
+                new IOSelectorProvider.IOProviderThreadFactory("Delivery-Thread-"));
     }
 
     @Override
@@ -28,7 +28,13 @@ public class ScheduleImpl implements Scheduler {
     }
 
     @Override
+    public void delivery(Runnable runnable) {
+        deliveryPool.execute(runnable);
+    }
+
+    @Override
     public void close() throws IOException {
         scheduledExecutorService.shutdownNow();
+        deliveryPool.shutdownNow();
     }
 }

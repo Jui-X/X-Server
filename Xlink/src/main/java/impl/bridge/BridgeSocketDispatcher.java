@@ -1,7 +1,9 @@
 package impl.bridge;
 
+import Utils.CloseUtils;
 import Utils.plugin.CircularByteBuffer;
 import core.*;
+import impl.exceptions.EmptyIOParameterException;
 
 import java.io.IOException;
 import java.nio.channels.Channels;
@@ -72,7 +74,7 @@ public class BridgeSocketDispatcher implements ReceiveDispatcher, SendDispatcher
     private void registerReceive() {
         try {
             receiver.postReceiveAsync();
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -115,11 +117,8 @@ public class BridgeSocketDispatcher implements ReceiveDispatcher, SendDispatcher
             // 大于0表示当前有数据需要发送
             if (circularByteBuffer.getAvailable() > 0) {
                 try {
-                    boolean isSucceed = sender.postSendAsync();
-                    if (isSucceed) {
-                        isSending.set(true);
-                    }
-                } catch (IOException e) {
+                    sender.postSendAsync();
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
@@ -136,21 +135,24 @@ public class BridgeSocketDispatcher implements ReceiveDispatcher, SendDispatcher
         }
 
         @Override
-        public void onConsumeFailed(IOParameter parameter, Exception e) {
-            e.printStackTrace();
+        public boolean onConsumeFailed(Throwable e) {
+            new RuntimeException(e).printStackTrace();
+            return true;
         }
 
         @Override
-        public void onConsumeCompleted(IOParameter parameter) {
+        public boolean onConsumeCompleted(IOParameter parameter) {
             parameter.finishWriting();
             try {
                 parameter.writeTo(writableByteChannel);
+                // 接收数据后继续请求发送数据
+                requestSend();
+                // 继续接收数据
+                return true;
             } catch (IOException e) {
                 e.printStackTrace();
+                return false;
             }
-            registerReceive();
-            // 接收到数据后立即请求转发数据
-            requestSend();
         }
     };
 
@@ -175,24 +177,28 @@ public class BridgeSocketDispatcher implements ReceiveDispatcher, SendDispatcher
         }
 
         @Override
-        public void onConsumeFailed(IOParameter parameter, Exception e) {
-            e.printStackTrace();
-            // 设置当前发送状态
-            synchronized (isSending) {
-                isSending.set(false);
+        public boolean onConsumeFailed(Throwable e) {
+            if (e instanceof EmptyIOParameterException) {
+                synchronized (isSending) {
+                    isSending.set(false);
+                    // 继续请求发送当前的数据
+                    requestSend();
+                }
+                return false;
+            } else {
+                return true;
             }
-            // 继续请求发送当前数据
-            requestSend();
         }
 
         @Override
-        public void onConsumeCompleted(IOParameter parameter) {
+        public boolean onConsumeCompleted(IOParameter parameter) {
             // 设置当前发送状态
             synchronized (isSending) {
                 isSending.set(false);
             }
             // 继续请求发送当前数据
             requestSend();
+            return true;
         }
     };
 }
