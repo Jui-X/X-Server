@@ -127,7 +127,7 @@ public class TCPServer implements ServerAcceptor.AcceptListener, Group.GroupMess
     @Override
     public void newSocketArrived(SocketChannel channel) {
         try {
-            ConnectorHandler connectorHandler = new ConnectorHandler(cachePath, channel, forwardThreadPoolExecutor);
+            ConnectorHandler connectorHandler = new ConnectorHandler(cachePath, channel);
             System.out.println(connectorHandler.getClientInfo() + " Connect!");
 
             // 添加收到消息的处理责任链
